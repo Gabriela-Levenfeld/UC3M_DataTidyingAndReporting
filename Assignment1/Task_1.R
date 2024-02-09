@@ -42,19 +42,28 @@ plot(cv)
 lambda_optimal <- cv$lambda.min
 
 # Fit ridge model with optimal lambda
-ridgeMod <- glmnet(x = x_49, y = y_49, alpha = 0, lambda = lambda_optimal, family = "binomial",
+ridge_model <- glmnet(x = x_49, y = y_49, alpha = 0, lambda = lambda_optimal, family = "binomial",
                    standardize = FALSE)
 
 
 # Step 3: Plotting beta ------------------------------------------------------------
-plot(cv) # TODO: find the correct way of doing this
+
+# REVIEW: Is this the correct way for plotting beta?
+# Extract coefficients
+beta <- coef(ridge_model, s = lambda_optimal)
+
+# Plot beta coefficients
+barplot(beta[-1], names.arg = 1:length(beta[-1]), 
+        main = "Estimated Beta Coefficients", xlab = "Pixel Index", ylab = "Beta Value")
+
+# Some conclusion:
+# This show the magnitude and direction of the coefficients, indicating which 
+# features (pixels) contribute more to the classification of digits 4 and 9.
 
 
 # Step 4: Model Evaluation ---------------------------------------------------------
 
-# REVIEW: Select the right option
-## OPTION 1, based on what it has been done on the Train data
-# Filter for 4's and 9's
+# Filter for 4's and 9's in the test data
 ind_test_49 <- test_nist$digit %in% c("4", "9")
 x_test_49 <- test_nist$px[ind_test_49, ]
 y_test_49 <- test_nist$digit[ind_test_49]
@@ -63,14 +72,8 @@ y_test_49 <- test_nist$digit[ind_test_49]
 x_test_49 <- as.matrix(x_test_49)
 y_test_49 <- ifelse(y_test_49 == "4", 1, 0)
 
-
-## OPTION 2, whole Test data has been included (I think it doesn't work properly)
-# y_test might not be well defined
-# x_test <- as.matrix(test_nist$px)
-# y_test <- ifelse(test_nist$digit == "4", 1, 0)
-
-# Make prediction on the Test data
-predictions <- predict(ridgeMod, type = "response", s = lambda_optimal, newx = x_test_49)
+# Make prediction on the test data for 4's and 9's
+predictions <- predict(ridge_model, type = "response", s = lambda_optimal, newx = x_test_49)
 
 # Evaluate model accuracy
 accuracy <- mean((predictions > 0.5) == y_test_49)
