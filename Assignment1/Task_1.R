@@ -1,4 +1,8 @@
-# Sketch provided by the professor
+#########################################
+##  TASK 1 - Gabriela Levenfeld Sabau  ##
+#########################################
+
+# Step 1: Sketch provided by the professor -----------------------------------------
 
 # Load data
 load(file = "qmnist_nist.RData")
@@ -23,9 +27,16 @@ y_49 <- train_nist$digit[ind_49]
 x_49 <- as.matrix(x_49)
 y_49 <- ifelse(y_49 == "4", 1, 0)
 
+
+# Step 2: Model Training -----------------------------------------------------------
+
 # Time-consuming!
 library(glmnet)
 set.seed(42)
 cv <- cv.glmnet(x = x_49, y = y_49, alpha = 0, family = "binomial",
                 nfolds = 10, standardize = FALSE)
 plot(cv)
+
+# Step 3: Plotting beta ------------------------------------------------------------
+# Step 4: Model Evaluation ---------------------------------------------------------
+# Step 5: Optional -----------------------------------------------------------------
