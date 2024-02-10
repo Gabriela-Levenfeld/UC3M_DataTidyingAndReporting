@@ -54,7 +54,10 @@ beta <- coef(ridge_model, s = lambda_optimal)
 
 # Plot beta coefficients
 barplot(beta[-1], names.arg = 1:length(beta[-1]), 
-        main = "Estimated Beta Coefficients", xlab = "Pixel Index", ylab = "Beta Value")
+        main = expression(paste("Estimated ", beta, " coefficients")),
+        xlab = "Pixel index", ylab = expression(paste(beta, " value")))
+
+# TODO: Investigated which are the pixel which contributed more to the model
 
 # Some conclusion:
 # This show the magnitude and direction of the coefficients, indicating which 
@@ -79,5 +82,11 @@ predictions <- predict(ridge_model, type = "response", s = lambda_optimal, newx 
 accuracy <- mean((predictions > 0.5) == y_test_49)
 print(paste("Accuracy:", accuracy))
 
+
 # Step 5: Optional -----------------------------------------------------------------
 # TODO: Implement Step 5
+
+
+# For adding References ------------------------------------------------------------
+
+toBibtex(citation("glmnet"))
