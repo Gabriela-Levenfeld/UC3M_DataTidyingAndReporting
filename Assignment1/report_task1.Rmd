@@ -1,0 +1,60 @@
+---
+title: "Data Tidying and Reporting – Task 1"
+author: "Gabriela Levenfeld Sabau"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: false
+    number_sections: false
+    highlight: tango
+    latex_engine: xelatex
+    fig_caption: true
+    extra_dependencies:
+      - geometry
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.bg = 'transparent')
+
+# Libraries
+library(glmnet)
+```
+
+## Introduction
+
+Handwritint digit recognition (*Explain briefly this problem, maybe just two lines*).
+
+This report devels using ridge logistic regression to distinguish between handwritten digits, specifically $4$ and $9$, providing insights into the challenge of digit classification.
+
+The dataset used has been provided by the professor over the file qmnist_nist.RData. And it contains both the train and the test dataset. This dataset storage the images as a collection of pixel values.
+
+
+## Methodology
+
+*Add a little explanation of what is ridge logistic model (including beta parameter and maybe the basic formula, so later it will be easy to explain the beta plot). Also it migth be good to add somo advantages of this model for the handwritten digit classification problem*
+
+*Is it worth is to add this? Mention the use of the glmnet package.*
+
+1. **Data preparation**. The first step, must be done over both datasets (train and test). It consist on filtering the data to focus on digits $4$ and $9$ (which are the numbers we want to learn to classify), and transforming it into a suitable format in order to use the model.
+
+2. **Model training**. On the statement we have some requirements.
+Firstly, use cross-validation for chosen $\lambda$ penalty. (*Explain why is it useful*)
+Also, not standardize the predictors. (*Explain why*)
+
+3. **Model performance**. The model's performance has been evaluated on the test dataset, which allows the model to use unseen data. The evaluation is based on its accuracy.
+
+
+## Results
+
+- **Training**.
+During this step, we can get some insights about the $\beta$ parameters of the model. The following plot shows the magnitude and direction of the coefficients, indicating which features (pixels) contribute more to the classification of digits $4$ and $9$.
+
+- **Testing**.
+The model achieved an accuracy of *poner valor linkeado a la variable*, which demonstrated a remarkable ability to differentiate between this two digits.
+
+
+## Conclusion
+
+## References
+
+Poner *references* del paper y de los paquetes usados.
