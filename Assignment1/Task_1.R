@@ -30,13 +30,28 @@ y_49 <- ifelse(y_49 == "4", 1, 0)
 
 # Step 2: Model Training -----------------------------------------------------------
 
-# TODO: Time-consuming!
 library(glmnet)
 set.seed(42)
+
+
+# REVIEW: Professor option (Time-consuming!) -> 3 mins
 cv <- cv.glmnet(x = x_49, y = y_49, alpha = 0, family = "binomial",
                 nfolds = 10, standardize = FALSE)
 plot(cv)
 
+# REVIEW: Option_1 lower nfold=5 -> 54 seg
+cv <- cv.glmnet(x = x_49, y = y_49, alpha = 0, family = "binomial",
+                nfolds = 5, standardize = FALSE)
+
+# REVIEW: Option_2 lower nfold=3 -> 50 seg y Accuracy: 0.978498293515358
+cv <- cv.glmnet(x = x_49, y = y_49, alpha = 0, family = "binomial",
+                nfolds = 3, standardize = FALSE)
+
+# REVIEW: Option_3 lower nfold=3 and nlambda=75-> 42 seg y Accuracy: 0.978327645051195
+cv <- cv.glmnet(x = x_49, y = y_49, alpha = 0, family = "binomial",
+                nfolds = 3, standardize = FALSE, nlambda = 75)
+
+# TODO: Seguir probando cosas
 
 # Find optimal lambda
 lambda_optimal <- cv$lambda.min
@@ -49,19 +64,40 @@ ridge_model <- glmnet(x = x_49, y = y_49, alpha = 0, lambda = lambda_optimal, fa
 # Step 3: Plotting beta ------------------------------------------------------------
 
 # REVIEW: Is this the correct way for plotting beta?
-# Extract coefficients
-beta <- coef(ridge_model, s = lambda_optimal)
+# Extract the beta coefficients for the optimal lambda, excluding the intercept
+beta_values <- as.vector(coef(ridge_model, s = lambda_optimal)[-1])
 
-# Plot beta coefficients
-barplot(beta[-1], names.arg = 1:length(beta[-1]), 
+# 1. Plot beta coefficients
+barplot(beta_values, names.arg = 1:length(beta_values), 
         main = expression(paste("Estimated ", beta, " coefficients")),
         xlab = "Pixel index", ylab = expression(paste(beta, " value")))
-
-# TODO: Investigated which are the pixel which contributed more to the model
 
 # Some conclusion:
 # This show the magnitude and direction of the coefficients, indicating which 
 # features (pixels) contribute more to the classification of digits 4 and 9.
+
+
+# Exploration of pixels which contributed more to the model
+
+# 2. Heatmap of beta coefficients using show_digit function
+show_digit(x = beta_values, col = colorRampPalette(c("blue", "white", "red"))(256))
+
+# This will display the beta coefficients in the format of the digit image,
+# using a blue-white-red color scheme to indicate the strength and direction of 
+# each pixel's influence.
+
+# Conclusion:
+# The color gradient from blue (negative influence) through white (neutral) 
+# to red (positive influence) will intuitively show the areas of importance 
+# across the digit's shape.
+
+
+# 3. Analytical exploration of beta coefficients
+abs_beta_values <- abs(beta_values) # Absolute values to assess influence
+beta_df <- data.frame(pixel_index = 1:length(abs_beta_values), beta_value = beta_values, abs_beta = abs_beta_values)
+beta_df_sorted <- beta_df[order(-beta_df$abs_beta), ] # Sort the dataframe
+top_n_pixels <- head(beta_df_sorted, 10) # Extract top N pixels (N=10)
+print(top_n_pixels)
 
 
 # Step 4: Model Evaluation ---------------------------------------------------------
