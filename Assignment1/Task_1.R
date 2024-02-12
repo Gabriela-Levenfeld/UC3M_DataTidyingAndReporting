@@ -2,6 +2,14 @@
 ##  TASK 1 - Gabriela Levenfeld Sabau  ##
 #########################################
 
+# Function to filter data for two specific digits and adapt to glmnet format
+prepare_data <- function(data, digits) {
+  ind <- data$digit %in% digits
+  x <- as.matrix(data$px[ind, ])
+  y <- ifelse(data$digit[ind] == as.character(digits[1]), 1, 0)
+  list(x = x, y = y)
+}
+
 # Step 1: Sketch provided by the professor -----------------------------------------
 
 # Load data
@@ -18,14 +26,7 @@ i <- 10
 show_digit(x = train_nist$px[i, ])
 train_nist$digit[i]
 
-# Filter for 4's and 9's
-ind_49 <- train_nist$digit %in% c(4, 9)
-x_49 <- train_nist$px[ind_49, ]
-y_49 <- train_nist$digit[ind_49]
-
-# Adapt to glmnet desired input
-x_49 <- as.matrix(x_49)
-y_49 <- ifelse(y_49 == "4", 1, 0)
+train_data <- prepare_data(train_nist, c("4", "9"))
 
 
 # Step 2: Model Training -----------------------------------------------------------
@@ -34,7 +35,7 @@ library(glmnet)
 set.seed(42)
 
 # Time-consuming! -> 3 mins and Accuracy: 0.977986348122867
-cv <- cv.glmnet(x = x_49, y = y_49, alpha = 0, family = "binomial",
+cv <- cv.glmnet(x = train_data$x, y = train_data$y, alpha = 0, family = "binomial",
                 nfolds = 10, standardize = FALSE)
 plot(cv)
 
@@ -44,7 +45,7 @@ lambda_optimal <- cv$lambda.min
 lambda_optimal <- 21.97585
 
 # Fit ridge model with optimal lambda
-ridge_model <- glmnet(x = x_49, y = y_49, alpha = 0, lambda = lambda_optimal, family = "binomial",
+ridge_model <- glmnet(x = train_data$x, y = train_data$y, alpha = 0, lambda = lambda_optimal, family = "binomial",
                    standardize = FALSE)
 
 
@@ -89,38 +90,18 @@ print(top_n_pixels)
 
 # Step 4: Model Evaluation ---------------------------------------------------------
 
-# Filter for 4's and 9's in the test data
-ind_test_49 <- test_nist$digit %in% c("4", "9")
-x_test_49 <- test_nist$px[ind_test_49, ]
-y_test_49 <- test_nist$digit[ind_test_49]
-
-# Adapt to glmnet desired input
-x_test_49 <- as.matrix(x_test_49)
-y_test_49 <- ifelse(y_test_49 == "4", 1, 0)
+test_data <- prepare_data(test_nist, c("4", "9"))
 
 # Make prediction on the test data for 4's and 9's
-predictions <- predict(ridge_model, type = "response", s = lambda_optimal, newx = x_test_49)
+predictions <- predict(ridge_model, type = "response", s = lambda_optimal, newx = test_data$x)
 
 # Evaluate model accuracy
-accuracy <- mean((predictions > 0.5) == y_test_49)
+accuracy <- mean((predictions > 0.5) == test_data$y)
 print(paste("Accuracy:", accuracy))
 
 
 # Step 5: Optional -----------------------------------------------------------------
 # TODO: Implement Step 5
-
-# Function to filter data for two specific digits and adapt to glmnet format
-prepare_data <- function(data, digits) {
-  ind <- data$digit %in% digits
-  x <- as.matrix(data$px[ind, ])
-  y <- ifelse(data$digit[ind] == as.character(digits[1]), 1, 0)
-  list(x = x, y = y)
-}
-
-# For ensuring this function works:
-prueba_filtro_49 <- prepare_data(test_nist, c("4", "9"))
-identical(x_test_49, prueba_filtro_49$x) TRUE
-identical(y_test_49, prueba_filtro_49$y) TRUE
 
 
 # Add References -------------------------------------------------------------------
