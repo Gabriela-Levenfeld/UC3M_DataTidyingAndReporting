@@ -11,15 +11,14 @@ output:
     fig_caption: true
     extra_dependencies:
       - geometry
+bibliography: references.bib
+nocite: '@*'
 link-citations: yes
 linkcolor: blue
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.bg = 'transparent')
-
-# Libraries
-library(glmnet)
 ```
 
 ## Introduction
@@ -43,7 +42,7 @@ Cross-validation is employed to determine the optimal $\lambda$ (*Explain why is
 
 ## Results
 
--   **Training**. During this step, we can get some insights about the $\beta$ parameters of the model. The following plot shows the magnitude and direction of the coefficients, indicating which features (pixels) contribute more to the classification of digits $4$ and $9$.
+-   **Training**. During this step, we can get some insights about the $\beta$ parameters of the model. The following plot shows the magnitude and direction of the coefficients, indicating which pixels contribute more to the classification of digits $4$ and $9$. Larger magnitude coefficients means higher contribution. 
 
 -   **Testing**. The model achieved an accuracy of *poner valor linkeado a la variable*, which demonstrated a remarkable ability to differentiate between this two digits.
 
@@ -52,3 +51,5 @@ Cross-validation is employed to determine the optimal $\lambda$ (*Explain why is
 ## References
 
 Poner *references* del paper y de los paquetes usados.
+
+<div id="refs"></div>

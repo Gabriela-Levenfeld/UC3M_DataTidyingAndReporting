@@ -110,6 +110,8 @@ print(paste("Accuracy:", accuracy))
 # TODO: Implement Step 5
 
 
-# For adding References ------------------------------------------------------------
+# Add References -------------------------------------------------------------------
 
+# REVIEW: Add just the necessary references
+knitr::write_bib(.packages(), "references.bib")
 toBibtex(citation("glmnet"))
