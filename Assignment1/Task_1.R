@@ -109,9 +109,23 @@ print(paste("Accuracy:", accuracy))
 # Step 5: Optional -----------------------------------------------------------------
 # TODO: Implement Step 5
 
+# Function to filter data for two specific digits and adapt to glmnet format
+prepare_data <- function(data, digits) {
+  ind <- data$digit %in% digits
+  x <- as.matrix(data$px[ind, ])
+  y <- ifelse(data$digit[ind] == as.character(digits[1]), 1, 0)
+  list(x = x, y = y)
+}
+
+# For ensuring this function works:
+prueba_filtro_49 <- prepare_data(test_nist, c("4", "9"))
+identical(x_test_49, prueba_filtro_49$x) TRUE
+identical(y_test_49, prueba_filtro_49$y) TRUE
+
 
 # Add References -------------------------------------------------------------------
 
-# REVIEW: Add just the necessary references
+# Returns the names of all packages loaded in the current R session
 knitr::write_bib(.packages(), "references.bib")
+# Reference for a specific package
 toBibtex(citation("glmnet"))
