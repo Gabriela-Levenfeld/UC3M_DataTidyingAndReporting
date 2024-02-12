@@ -33,28 +33,15 @@ y_49 <- ifelse(y_49 == "4", 1, 0)
 library(glmnet)
 set.seed(42)
 
-
-# REVIEW: Professor option (Time-consuming!) -> 3 mins
+# Time-consuming! -> 3 mins and Accuracy: 0.977986348122867
 cv <- cv.glmnet(x = x_49, y = y_49, alpha = 0, family = "binomial",
                 nfolds = 10, standardize = FALSE)
 plot(cv)
 
-# REVIEW: Option_1 lower nfold=5 -> 54 seg
-cv <- cv.glmnet(x = x_49, y = y_49, alpha = 0, family = "binomial",
-                nfolds = 5, standardize = FALSE)
-
-# REVIEW: Option_2 lower nfold=3 -> 50 seg y Accuracy: 0.978498293515358
-cv <- cv.glmnet(x = x_49, y = y_49, alpha = 0, family = "binomial",
-                nfolds = 3, standardize = FALSE)
-
-# REVIEW: Option_3 lower nfold=3 and nlambda=75-> 42 seg y Accuracy: 0.978327645051195
-cv <- cv.glmnet(x = x_49, y = y_49, alpha = 0, family = "binomial",
-                nfolds = 3, standardize = FALSE, nlambda = 75)
-
-# TODO: Seguir probando cosas
-
 # Find optimal lambda
 lambda_optimal <- cv$lambda.min
+# Solved by setting lambda as a fixed value
+lambda_optimal <- 21.97585
 
 # Fit ridge model with optimal lambda
 ridge_model <- glmnet(x = x_49, y = y_49, alpha = 0, lambda = lambda_optimal, family = "binomial",
@@ -74,7 +61,7 @@ barplot(beta_values, names.arg = 1:length(beta_values),
 
 # Some conclusion:
 # This show the magnitude and direction of the coefficients, indicating which 
-# features (pixels) contribute more to the classification of digits 4 and 9.
+# pixels contribute more to the classification of digits 4 and 9.
 
 
 # Exploration of pixels which contributed more to the model
