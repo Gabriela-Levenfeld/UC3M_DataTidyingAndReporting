@@ -2,69 +2,110 @@
 ##  TASK 1 - Gabriela Levenfeld Sabau  ##
 #########################################
 
-# Function to filter data for two specific digits and adapt to glmnet format
+# General functions ----------------------------------------------------------------
+
+# Function to prepare data for two specific digits and adapt it to glmnet format
 prepare_data <- function(data, digits) {
   ind <- data$digit %in% digits
   x <- as.matrix(data$px[ind, ])
   y <- ifelse(data$digit[ind] == as.numeric(digits[1]), 1, 0)
-  list(x = x, y = y)
+  return(list(x = x, y = y))
 }
 
-# Step 1: Sketch provided by the professor -----------------------------------------
+# Train and evaluate a ridge logistic model for two specific digits
+train_and_evaluate <- function(digitA, digitB, train_data, test_data) {
+  data_train <- prepare_data(train_data, c(digitA, digitB))
+  data_test <- prepare_data(test_data, c(digitA, digitB))
+  
+  # Perform cross-validation to find the optimal regularization parameter (lambda)
+  cv_model <- cv.glmnet(x = data_train$x, y = data_train$y, alpha = 0, family = "binomial",
+                        nfolds = 10, standardize = FALSE)
+  # CHANGED: Removed lambda plot
+  # plot(cv)
+  
+  lambda_optimal <- cv_model$lambda.min
+  
+  # Fit the model with the optimal lambda
+  model <- glmnet(x = data_train$x, y = data_train$y, alpha = 0, lambda = lambda_optimal, family = "binomial",
+                  standardize = FALSE)
+  
+  # Predict on test data and evaluate accuracy
+  predictions <- predict(model, newx = data_test$x, s = lambda_optimal, type = "response")
+  accuracy <- mean((predictions > 0.5) == data_test$y)
+  
+  return(list(accuracy = accuracy, lambda = lambda_optimal))
+}
 
-# Load data
-load(file = "qmnist_nist.RData")
+# Function for plotting beta coefficients
+plot_beta_coef <- function(lambda_optimal, digitA, digitB, train_data) {
+  data_train <- prepare_data(train_data, c(digitA, digitB))
+  # Fit the model with the optimal lambda
+  model <- glmnet(x = data_train$x, y = data_train$y, alpha = 0, lambda = lambda_optimal, family = "binomial",
+                  standardize = FALSE)
+  # Extract beta coefficients for the optimal lambda, excluding the intercept
+  beta_values <- as.vector(coef(model, s = lambda_optimal)[-1])
+  df_beta <- data.frame(PixelIndex = 1:length(beta_values), BetaValue = beta_values)
+  
+  # Plot beta coefficients
+  ggplot(df_beta, aes(x = PixelIndex, y = BetaValue)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    theme(panel.background = element_rect(fill = "transparent", colour = NA),
+          plot.background = element_rect(fill = "transparent", colour = NA),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title = expression(paste("Estimated ", beta, " coefficients")), x = "Pixel index", y = expression(paste(beta, " value")))
+}
 
-# Visualization helper
+# Function to display a digit image
 show_digit <- function(x, col = gray(255:1 / 255), ...) {
   l <- sqrt(length(x))
   image(matrix(as.numeric(x), nrow = l)[, l:1], col = col, ...)
 }
 
-# Visualize i-th image
+# Visualize i-th image -> REMOVED (?)
 i <- 10
 show_digit(x = train_nist$px[i, ])
 train_nist$digit[i]
 
-train_data <- prepare_data(train_nist, c("4", "9"))
 
+# Load library and data ------------------------------------------------------------
 
-# Step 2: Model Training -----------------------------------------------------------
-
+# Load required library
 library(glmnet)
+library(ggplot2)
+
+# Load data
+load(file = "qmnist_nist.RData")
+
+# Set seed for reproducibility
 set.seed(42)
 
+
+# Classifying digits 4 and 9 -------------------------------------------------------
+
+digitA <- 4; digitB <- 9
+
+# Solved time-consuming by setting fixed values
+result_AB <- list(accuracy = 0.977986348122867, lambda = 21.9758474587424)
+
 # Time-consuming! -> 3 mins and Accuracy: 0.977986348122867
-cv <- cv.glmnet(x = train_data$x, y = train_data$y, alpha = 0, family = "binomial",
-                nfolds = 10, standardize = FALSE)
-plot(cv)
+result_AB <- train_and_evaluate(digitA, digitB, train_nist, test_nist)
 
-# Find optimal lambda
-lambda_optimal <- cv$lambda.min
-# Solved by setting lambda as a fixed value
-lambda_optimal <- 21.97585
-
-# Fit ridge model with optimal lambda
-ridge_model <- glmnet(x = train_data$x, y = train_data$y, alpha = 0, lambda = lambda_optimal, family = "binomial",
-                   standardize = FALSE)
+print(paste("Accuracy for", digitA, "vs", digitB,"is", result_AB$accuracy))
+print(paste("Optimal lambda for", digitA, "vs", digitB,"is", result_AB$lambda))
 
 
-# Step 3: Plotting beta ------------------------------------------------------------
-
-# REVIEW: Is this the correct way for plotting beta?
-# Extract the beta coefficients for the optimal lambda, excluding the intercept
-beta_values <- as.vector(coef(ridge_model, s = lambda_optimal)[-1])
+# Plotting beta for digits 4 and 9 -------------------------------------------------
 
 # 1. Plot beta coefficients
-barplot(beta_values, names.arg = 1:length(beta_values), 
-        main = expression(paste("Estimated ", beta, " coefficients")),
-        xlab = "Pixel index", ylab = expression(paste(beta, " value")))
+plot_beta_coef(result_AB$lambda, digitA, digitB, train_nist)
 
 # Some conclusion:
 # This show the magnitude and direction of the coefficients, indicating which 
 # pixels contribute more to the classification of digits 4 and 9.
 
 
+# TODO: Review this function, not working now
 # Exploration of pixels which contributed more to the model
 
 # 2. Heatmap of beta coefficients using show_digit function
@@ -88,38 +129,7 @@ top_n_pixels <- head(beta_df_sorted, 10) # Extract top N pixels (N=10)
 print(top_n_pixels)
 
 
-# Step 4: Model Evaluation ---------------------------------------------------------
-
-test_data <- prepare_data(test_nist, c("4", "9"))
-
-# Make prediction on the test data for 4's and 9's
-predictions <- predict(ridge_model, type = "response", s = lambda_optimal, newx = test_data$x)
-
-# Evaluate model accuracy
-accuracy <- mean((predictions > 0.5) == test_data$y)
-print(paste("Accuracy:", accuracy))
-
-
 # Step 5: Optional -----------------------------------------------------------------
-# TODO: Implement Step 5
-
-# Modified function to return both accuracy and optimal lambda
-train_and_evaluate <- function(digit1, digit2, train_data, test_data) {
-  data_train <- prepare_data(train_data, c(digit1, digit2))
-  data_test <- prepare_data(test_data, c(digit1, digit2))
-  
-  cv_model <- cv.glmnet(x = data_train$x, y = data_train$y, alpha = 0, family = "binomial",
-                        nfolds = 10, standardize = FALSE)
-  
-  lambda_optimal <- cv_model$lambda.min
-  model <- glmnet(x = data_train$x, y = data_train$y, alpha = 0, lambda = lambda_optimal, family = "binomial",
-                  standardize = FALSE)
-  
-  predictions <- predict(model, newx = data_test$x, s = lambda_optimal, type = "response")
-  accuracy <- mean((predictions > 0.5) == data_test$y)
-  
-  return(list(accuracy = accuracy, lambda = lambda_optimal))
-}
 
 digits <- 0:9
 # Initialize structures to store results
@@ -143,13 +153,8 @@ for(i in digits) {
 print(lambda_optimals)
 print(accuracy_matrix)
 
-# Save lambdas and accuracy list to a file
-save(lambda_optimals, file = "precomputed_lambdas.RData")
-save(accuracy_matrix, file = "precomputed_accuracy.RData")
-# In a future session, you can load the precomputed lambdas
-load("precomputed_lambdas.RData")
-load("precomputed_accuracy.RData")
-
+# TODO: Adapt code for the .Rmd
+# TODO: Visualized beta coeff
 # Define the data as a vector (filling in the matrix by columns)
 lambda_data <- c(
   0, 11.72903, 35.984219, 20.63340, 8.438745, 15.188551, 10.398900, 4.786700, 39.540633, 19.647706,
@@ -177,7 +182,6 @@ accuracy_data <- c(
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0.9890240,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 )
-# REVIEW: Check the accuracy matrix is correct
 
 # Download the lambda optimal and accuracy matrix
 lambda_optimals_new <- matrix(lambda_data, nrow = 10, ncol = 10, byrow = FALSE)
