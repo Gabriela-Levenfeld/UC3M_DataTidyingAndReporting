@@ -2,20 +2,20 @@
 ##  TASK 1 - Gabriela Levenfeld Sabau  ##
 #########################################
 
-# General functions ----------------------------------------------------------------
+# Functions ------------------------------------------------------------------------
 
-# Function to prepare data for two specific digits and adapt it to glmnet format
+# Prepare data for two specific digits and adapt it to glmnet format
 prepare_data <- function(data, digits) {
   ind <- data$digit %in% digits
   x <- as.matrix(data$px[ind, ])
   y <- ifelse(data$digit[ind] == as.numeric(digits[1]), 1, 0)
-  return(list(x = x, y = y))
+  list(x = x, y = y)
 }
 
-# Train and evaluate a ridge logistic model for two specific digits
-train_and_evaluate <- function(digitA, digitB, train_data, test_data) {
-  data_train <- prepare_data(train_data, c(digitA, digitB))
-  data_test <- prepare_data(test_data, c(digitA, digitB))
+# Train and evaluate a model
+train_and_evaluate <- function(digit_a, digit_b, train_data, test_data) {
+  data_train <- prepare_data(train_data, c(digit_a, digit_b))
+  data_test <- prepare_data(test_data, c(digit_a, digit_b))
   
   # Perform cross-validation to find the optimal regularization parameter (lambda)
   cv_model <- cv.glmnet(x = data_train$x, y = data_train$y, alpha = 0, family = "binomial",
@@ -33,15 +33,21 @@ train_and_evaluate <- function(digitA, digitB, train_data, test_data) {
   predictions <- predict(model, newx = data_test$x, s = lambda_optimal, type = "response")
   accuracy <- mean((predictions > 0.5) == data_test$y)
   
-  return(list(accuracy = accuracy, lambda = lambda_optimal))
+  list(accuracy = accuracy, lambda = lambda_optimal)
 }
 
-# Function for plotting beta coefficients
-plot_beta_coef <- function(lambda_optimal, digitA, digitB, train_data) {
-  data_train <- prepare_data(train_data, c(digitA, digitB))
+# Plot beta coefficients
+plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
+  data_train <- prepare_data(train_data, c(digit_a, digit_b))
   # Fit the model with the optimal lambda
-  model <- glmnet(x = data_train$x, y = data_train$y, alpha = 0, lambda = lambda_optimal, family = "binomial",
-                  standardize = FALSE)
+  model <- glmnet(
+    x = data_train$x,
+    y = data_train$y, 
+    alpha = 0, 
+    lambda = lambda_optimal, 
+    family = "binomial",
+    standardize = FALSE
+  )
   # Extract beta coefficients for the optimal lambda, excluding the intercept
   beta_values <- as.vector(coef(model, s = lambda_optimal)[-1])
   df_beta <- data.frame(PixelIndex = 1:length(beta_values), BetaValue = beta_values)
@@ -50,13 +56,11 @@ plot_beta_coef <- function(lambda_optimal, digitA, digitB, train_data) {
   ggplot(df_beta, aes(x = PixelIndex, y = BetaValue)) +
     geom_bar(stat = "identity") +
     theme_minimal() +
-    theme(panel.background = element_rect(fill = "transparent", colour = NA),
-          plot.background = element_rect(fill = "transparent", colour = NA),
-          plot.title = element_text(hjust = 0.5)) +
+    theme(plot.title = element_text(hjust = 0.5)) +
     labs(title = expression(paste("Estimated ", beta, " coefficients")), x = "Pixel index", y = expression(paste(beta, " value")))
 }
 
-# Function to display a digit image
+# Display digit image
 show_digit <- function(x, col = gray(255:1 / 255), ...) {
   l <- sqrt(length(x))
   image(matrix(as.numeric(x), nrow = l)[, l:1], col = col, ...)
@@ -68,74 +72,43 @@ show_digit(x = train_nist$px[i, ])
 train_nist$digit[i]
 
 
-# Load library and data ------------------------------------------------------------
-
-# Load required library
+# Load libraries -------------------------------------------------------------------
 library(glmnet)
 library(ggplot2)
 
-# Load data
+
+# Prepare the environment ----------------------------------------------------------
+set.seed(42) # Ensures reproducibility
 load(file = "qmnist_nist.RData")
 
-# Set seed for reproducibility
-set.seed(42)
+
+# Classification task 4 vs 9 -------------------------------------------------------
+
+digit_a <- 4
+digit_b <- 9
+
+# Example of training and evaluating
+result_ab <- train_and_evaluate(digit_a, digit_b, train_nist, test_nist)
+# Plot beta coefficients for the model
+plot_beta_coef(result_ab$lambda, digit_a, digit_b, train_nist)
+
+print(paste("Accuracy for", digit_a, "vs", digit_b, "is", result_ab$accuracy))
+print(paste("Optimal lambda for", digit_a, "vs", digit_b, "is", result_ab$lambda))
 
 
-# Classifying digits 4 and 9 -------------------------------------------------------
-
-digitA <- 4; digitB <- 9
-
-# Solved time-consuming by setting fixed values
-result_AB <- list(accuracy = 0.977986348122867, lambda = 21.9758474587424)
-
-# Time-consuming! -> 3 mins and Accuracy: 0.977986348122867
-result_AB <- train_and_evaluate(digitA, digitB, train_nist, test_nist)
-
-print(paste("Accuracy for", digitA, "vs", digitB,"is", result_AB$accuracy))
-print(paste("Optimal lambda for", digitA, "vs", digitB,"is", result_AB$lambda))
+# Time-consuming! (3 mins) -> Solved by setting fixed values
+result_49 <- list(accuracy = 0.977986348122867, lambda = 21.9758474587424)
 
 
-# Plotting beta for digits 4 and 9 -------------------------------------------------
-
-# 1. Plot beta coefficients
-plot_beta_coef(result_AB$lambda, digitA, digitB, train_nist)
-
-# Some conclusion:
-# This show the magnitude and direction of the coefficients, indicating which 
-# pixels contribute more to the classification of digits 4 and 9.
-
-
-# TODO: Review this function, not working now
-# Exploration of pixels which contributed more to the model
-
-# 2. Heatmap of beta coefficients using show_digit function
-show_digit(x = beta_values, col = colorRampPalette(c("blue", "white", "red"))(256))
-
-# This will display the beta coefficients in the format of the digit image,
-# using a blue-white-red color scheme to indicate the strength and direction of 
-# each pixel's influence.
-
-# Conclusion:
-# The color gradient from blue (negative influence) through white (neutral) 
-# to red (positive influence) will intuitively show the areas of importance 
-# across the digit's shape.
-
-
-# 3. Analytical exploration of beta coefficients
-abs_beta_values <- abs(beta_values) # Absolute values to assess influence
-beta_df <- data.frame(pixel_index = 1:length(abs_beta_values), beta_value = beta_values, abs_beta = abs_beta_values)
-beta_df_sorted <- beta_df[order(-beta_df$abs_beta), ] # Sort the dataframe
-top_n_pixels <- head(beta_df_sorted, 10) # Extract top N pixels (N=10)
-print(top_n_pixels)
-
-
-# Step 5: Optional -----------------------------------------------------------------
+# Optional analysis - Comparing all digit pairs ------------------------------------
 
 digits <- 0:9
+
 # Initialize structures to store results
 lambda_optimals <- matrix(0, nrow = 10, ncol = 10, dimnames = list(digits, digits))
 accuracy_matrix <- matrix(0, nrow = 10, ncol = 10, dimnames = list(digits, digits))
-# Iterate over all unique digit pairs
+
+# Iterate over all unique pairs of digits
 for(i in digits) {
   for(j in digits) {
     # Symmetric matrix
@@ -153,9 +126,9 @@ for(i in digits) {
 print(lambda_optimals)
 print(accuracy_matrix)
 
-# TODO: Adapt code for the .Rmd
-# TODO: Visualized beta coeff
-# Define the data as a vector (filling in the matrix by columns)
+
+# TODO: Visualized beta coefficients with a rank heatmap
+
 lambda_data <- c(
   0, 11.72903, 35.984219, 20.63340, 8.438745, 15.188551, 10.398900, 4.786700, 39.540633, 19.647706,
   0, 0, 4.386601, 14.72075, 9.055458, 4.542014, 7.198158, 5.834560, 18.191963, 5.250782,
@@ -169,7 +142,6 @@ lambda_data <- c(
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 )
 
-# Define the accuracy data as a vector
 accuracy_data <- c(
   0, 0.9996938, 0.9927043, 0.9947343, 0.9973571, 0.9892808, 0.9933028, 0.9974579, 0.9934598, 0.9963648,
   0, 0, 0.9979857, 0.9972532, 0.9987382, 0.9968699, 0.9992197, 0.9974164, 0.9901593, 0.9977911,
@@ -194,6 +166,32 @@ accuracy_matrix_new <- matrix(accuracy_data, nrow = 10, ncol = 10, byrow = FALSE
 # Assign row and column names
 rownames(accuracy_matrix_new) <- colnames(accuracy_matrix_new) <- as.character(0:9)
 print(accuracy_matrix_new)
+
+
+# Extra: Plotting stuff for me -----------------------------------------------------
+
+# 1. Plot beta coefficients
+plot_beta_coef(result_ab$lambda, digit_a, digit_b, train_nist)
+
+# Some conclusion:
+# This show the magnitude and direction of the coefficients, indicating which 
+# pixels contribute more to the classification of digits 4 and 9.
+
+
+# TODO: Review this function, not working now
+# Exploration of pixels which contributed more to the model
+
+# 2. Heatmap of beta coefficients using show_digit function
+show_digit(x = beta_values, col = colorRampPalette(c("blue", "white", "red"))(256))
+
+# This will display the beta coefficients in the format of the digit image,
+# using a blue-white-red color scheme to indicate the strength and direction of 
+# each pixel's influence.
+
+# Conclusion:
+# The color gradient from blue (negative influence) through white (neutral) 
+# to red (positive influence) will intuitively show the areas of importance 
+# across the digit's shape.
 
 
 # Add References -------------------------------------------------------------------
