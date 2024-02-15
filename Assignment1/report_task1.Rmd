@@ -1,6 +1,5 @@
 ---
 title: "Data Tidying and Reporting – Task 1"
-author: "Gabriela Levenfeld Sabau"
 date: "`r Sys.Date()`"
 output:
   pdf_document:
@@ -21,35 +20,147 @@ linkcolor: blue
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.bg = 'transparent')
 ```
 
+```{r load_libraries, include=FALSE}
+library(glmnet)
+library(ggplot2)
+```
+
+
 ## Introduction
 
-Handwritten digit recognition involves the conversion of human handwritten digit images into digital representations [[Ref. 1]](https://learner-cares.medium.com/handwritten-digit-recognition-using-convolutional-neural-network-cnn-with-tensorflow-2f444e6c4c31). This task might be challenging due to humans imperfections and the wide variability of handwritten forms.
+Handwritten digit recognition involves the conversion of human handwritten digit images into digital representations. This task might be challenging due to humans imperfections and the wide variability of handwritten forms. As well as some digits might look similar, increasing the difficulty of the task.
 
-The dataset used for this project has been provided by the professor in the file named `qmnist_nist.RData`. It contains both the training and testing datasets, storing the images as collections of pixel values. This report focuses on using ridge logistic regression to distinguish between handwritten digits, specifically $4$ and $9$, providing insights into the digit classification.
-
-*Write reference correctly*
+The dataset used for this project has been provided by the professor in the file named `qmnist_nist.RData`. It contains both the training and testing datasets, storing the images as collections of pixel values. This report focuses on using ridge logistic regression to distinguish between handwritten digits, specifically $4$ and $9$, and lately this procedure has been extrapolated to the classification problems of one versus another digit.
 
 ## Methodology
 
 Ridge logistic regression is a regularization technique used to classify data by applying a penalty term to the logistic regression loss function. The penalty term, represented by $\lambda\sum_{j=1}^n \beta_j^2$, helps shrink the coefficients towards zero, effectively limiting the model's complexity and reducing overfitting. The main advantage is that this technique is well-suited for high-dimensional data like images.
+**BUSCAR REFERENCIAS**
 
-1.  **Data preparation**. This step must be performance on both the training and testing dataset. The data is filtered to only include digits $4$ and $9$, which are the numbers we want to learn to classify. Then, the data is transformed into a suitable format in order to use the model.
+1.  **Data preparation**. This step must be performance on both the training and testing dataset. The data is filtered to only include two digits, which are the numbers we want to learn to classify. Then, the data is transformed into a suitable format in order to use the model.
 
 2.  **Model training**. It is implemented using the `glmnet` package.
-Cross-validation is employed to determine the optimal $\lambda$ (*Explain why is it useful*), which controls the strength of regularization. The predictors are not standardized due to the consistent scale and range of pixel values in handwritten digit images.
+Cross-validation is employed to determine the optimal $\lambda$ (**Explain why is it useful**), which controls the strength of regularization. It is worth mentioning that the predictors are not standardized due to the consistent scale and range of pixel values in handwritten digit images.
 
 3.  **Model performance**. The model's performance has been assessed using the test set, a separate data not used up to now. The evaluation metric is based on the proportion of correctly classified digits, known as accuracy.
 
 ## Results
 
+```{r functions, echo=FALSE}
+# Functions --------------------------------------------------------------------
+
+# Prepare data for two specific digits and adapt it to glmnet format
+prepare_data <- function(data, digits) {
+  ind <- data$digit %in% digits # For filtering 2 digits
+  x <- as.matrix(data$px[ind, ])
+  y <- ifelse(data$digit[ind] == as.numeric(digits[1]), 1, 0)
+  list(x = x, y = y)
+}
+
+# Train and evaluate a model
+train_and_evaluate <- function(digit_a, digit_b, train_data, test_data) {
+  data_train <- prepare_data(train_data, c(digit_a, digit_b))
+  data_test <- prepare_data(test_data, c(digit_a, digit_b))
+  
+  # Perform cross-validation to find the optimal regularization parameter (lambda)
+  cv_model <- cv.glmnet(x = data_train$x, y = data_train$y, alpha = 0, family = "binomial",
+                        nfolds = 10, standardize = FALSE)
+  
+  lambda_optimal <- cv_model$lambda.min
+  
+  # Fit the model with the optimal lambda
+  model <- glmnet(x = data_train$x, y = data_train$y, alpha = 0, lambda = lambda_optimal, family = "binomial",
+                  standardize = FALSE)
+  
+  # Predict on test data and evaluate accuracy
+  predictions <- predict(model, newx = data_test$x, s = lambda_optimal, type = "response")
+  accuracy <- mean((predictions > 0.5) == data_test$y)
+  
+  list(accuracy = accuracy, lambda = lambda_optimal)
+}
+
+# Plot beta coefficients
+plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
+  data_train <- prepare_data(train_data, c(digit_a, digit_b))
+  # Fit the model with the optimal lambda
+  model <- glmnet(
+    x = data_train$x,
+    y = data_train$y, 
+    alpha = 0, 
+    lambda = lambda_optimal, 
+    family = "binomial",
+    standardize = FALSE
+  )
+  # Extract beta coefficients for the optimal lambda, excluding the intercept
+  beta_values <- as.vector(coef(model, s = lambda_optimal)[-1])
+  df_beta <- data.frame(PixelIndex = 1:length(beta_values), BetaValue = beta_values)
+  
+  # Plot beta coefficients
+  ggplot(df_beta, aes(x = PixelIndex, y = BetaValue)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    labs(
+      title = expression(paste("Estimated ", beta, " coefficients")),
+      x = "Pixel index", 
+      y = expression(paste(beta, " value"))
+      )
+}
+
+# Display digit image
+show_digit <- function(x, col = gray(255:1 / 255), ...) {
+  l <- sqrt(length(x))
+  image(matrix(as.numeric(x), nrow = l)[, l:1], col = col, ...)
+}
+```
+
+
+```{r prepare_enviroment, echo=FALSE}
+# Prepare the environment ------------------------------------------------------
+set.seed(42) # Ensures reproducibility
+load(file = "qmnist_nist.RData")
+```
+
+
+```{r classification_AvsB, eval=FALSE, include=FALSE}
+# Example of classification task digit_a vs digit_b ----------------------------
+digit_a <- 4
+digit_b <- 9
+
+# Example of training and evaluating
+result_ab <- train_and_evaluate(digit_a, digit_b, train_nist, test_nist)
+# Plot beta coefficients for the model
+plot_beta_coef(result_ab$lambda, digit_a, digit_b, train_nist)
+
+print(paste("Accuracy for", digit_a, "vs", digit_b, "is", result_ab$accuracy))
+print(paste("Optimal lambda for", digit_a, "vs", digit_b, "is", result_ab$lambda))
+```
+
+
+```{r classification_4vs9, echo=FALSE, out.width="50%"}
+# Classification task 4 vs 9 ---------------------------------------------------
+digit_a <- 4
+digit_b <- 9
+
+# Results are precomputed
+result_49 <- list(accuracy = 0.977986348122867, lambda = 21.9758474587424)
+plot_beta_coef(result_49$lambda, digit_a, digit_b, train_nist)
+```
+
 -   **Training**. During this step, we can get some insights about the $\beta$ parameters of the model. The following plot shows the magnitude and direction of the coefficients, indicating which pixels contribute more to the classification of digits $4$ and $9$. Larger magnitude coefficients means higher contribution. 
 
--   **Testing**. The model achieved an accuracy of *poner valor linkeado a la variable*, which demonstrated a remarkable ability to differentiate between this two digits.
+-   **Testing**. The model achieved an accuracy of result_49$accuracy, which demonstrated a remarkable ability to differentiate between this two digits.
 
 ## Conclusion
 
+**Mejor explicar results del 4vs9 y, luego, el general**
+
+Finally, the task of classifying one digit vs another can be extrapolated to the whole dataset. The process will be exactly the same as the one explained before, for digit $4$ vs $9$.
+The results obtained demonstrated an amazing performance of the selected model. Over the $45$ models created, the accuracy obtained is **valor_del_average_accuracy**.
+Lastly, the following plot provides insights into the pixels that are more important for classifying correctly the digits across all digit pair classification. For instance, the regions with **blue** color has a larger absolute $\beta$ coefficients across all clasification tasks which turns into more important pixels because they consistently play a significant role in distinguishing between digits. On the other hand, **red** areas mean pixels with smaller absolute $\beta$'s thus they are less important for the classification problem. It is clear that this types of pixels can be found in the edges and corners of the images.
+
 ## References
 
-Poner *references* del paper y de los paquetes usados.
+Poner **references NECESARIAS** del paper y de los paquetes usados.
 
 <div id="refs"></div>
