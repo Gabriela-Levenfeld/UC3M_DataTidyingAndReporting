@@ -66,7 +66,9 @@ plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
 }
 
 # Visualize average rank beta coefficients using a heatmap
-visualize_beta_ranks <- function(beta_rank_matrix) {
+visualize_beta_ranks <- function(beta_ranks) {
+  beta_rank_matrix <- matrix(beta_ranks, nrow = 28, byrow = TRUE) # Reshape for visualization (28x28 pixels)
+  
   ggplot(melt(beta_rank_matrix), aes(x = Var1, y = Var2, fill = value)) +
     geom_tile() +
     scale_fill_gradient(low = "white", high = "blue", name = "Rank") +
@@ -106,21 +108,22 @@ digit_a <- 4
 digit_b <- 9
 
 result_ab <- train_and_evaluate(digit_a, digit_b, train_nist, test_nist)
-print(paste("Accuracy for", digit_a, "vs", digit_b, "is", result_ab$accuracy))
-print(paste("Optimal lambda for", digit_a, "vs", digit_b, "is", result_ab$lambda))
+sprintf("Accuracy for %d vs %d: %f", digit_a, digit_b, result_ab$accuracy)
+sprintf("Optimal lambda for %d vs %d: %f", digit_a, digit_b, result_ab$lambda)
 
 plot_beta_coef(result_ab$lambda, digit_a, digit_b, train_nist)
+# Some conclusion:
+# This show the magnitude and direction of the coefficients, indicating which 
+# pixels contribute more to the classification of digits 4 and 9.
 
 # Heatmap for beta coefficient
 beta_absolute <- abs(result_ab$beta_values)
 beta_ranks <- rank(beta_absolute, ties.method = "average") # Rank betas; high absolute values get high ranks
-beta_rank_matrix <- matrix(beta_ranks, nrow = 28, byrow = TRUE) # Reshape for visualization (28x28 pixels)
-visualize_beta_ranks(beta_rank_matrix)
+visualize_beta_ranks(beta_ranks)
 
 
 # Time-consuming! (3 mins) -> Solved by setting fixed values
-# Creating the beta_rank_matrix with the provided data
-# TODO: está mal sacada la matrix
+# Precomputed beta_rank_matrix with the provided data
 beta_ranks_49 <- c(
   93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93,
   93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93,
@@ -154,9 +157,7 @@ beta_ranks_49 <- c(
     
 result_49 <- list(accuracy = 0.977986348122867, lambda = 21.9758474587424)
 plot_beta_coef(result_49$lambda, digit_a, digit_b, train_nist)
-# Heatmap for beta coefficient
-beta_rank_matrix <- matrix(beta_ranks_49, nrow = 28, byrow = TRUE) # Reshape for visualization (28x28 pixels)
-visualize_beta_ranks(beta_rank_matrix)
+visualize_beta_ranks(beta_ranks_49) # Heatmap
 
 # Optional analysis - Comparing all digit pairs ------------------------------------
 
@@ -187,8 +188,7 @@ for(i in digits) {
 # Average beta values
 beta_aggregate <- beta_aggregate/(length(digits)*(length(digits)-1)/2)
 beta_ranks <- rank(beta_aggregate[,1], ties.method = "average") # Rank betas; high absolute values get high ranks
-beta_rank_matrix <- matrix(beta_ranks, nrow = 28, byrow = TRUE) # Reshape for visualization (28x28 pixels)
-visualize_beta_ranks(beta_rank_matrix)
+visualize_beta_ranks(beta_ranks)
 
 print(lambda_optimals)
 print(accuracy_matrix)
@@ -262,18 +262,7 @@ rownames(accuracy_data) <- colnames(accuracy_data) <- as.character(0:9)
 print(accuracy_data)
 
 # Load precomputed data: beta rank coefficients
-beta_rank_matrix <- matrix(beta_ranks, nrow = 28, byrow = TRUE) # Reshape for visualization (28x28 pixels)
-visualize_beta_ranks(beta_rank_matrix)
-
-
-# Extra: Plotting stuff for me -----------------------------------------------------
-
-# 1. Plot beta coefficients
-plot_beta_coef(result_ab$lambda, digit_a, digit_b, train_nist)
-
-# Some conclusion:
-# This show the magnitude and direction of the coefficients, indicating which 
-# pixels contribute more to the classification of digits 4 and 9.
+visualize_beta_ranks(beta_ranks)
 
 
 # Add References -------------------------------------------------------------------
