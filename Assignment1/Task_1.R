@@ -105,20 +105,58 @@ load(file = "qmnist_nist.RData")
 digit_a <- 4
 digit_b <- 9
 
-# FIXME: Falta meter result_49 el beta_value
 result_ab <- train_and_evaluate(digit_a, digit_b, train_nist, test_nist)
-plot_beta_coef(result_ab$lambda, digit_a, digit_b, train_nist)
-# TODO: Falta meter el heatmap
-
-
 print(paste("Accuracy for", digit_a, "vs", digit_b, "is", result_ab$accuracy))
 print(paste("Optimal lambda for", digit_a, "vs", digit_b, "is", result_ab$lambda))
 
+plot_beta_coef(result_ab$lambda, digit_a, digit_b, train_nist)
+
+# Heatmap for beta coefficient
+beta_absolute <- abs(result_ab$beta_values)
+beta_ranks <- rank(beta_absolute, ties.method = "average") # Rank betas; high absolute values get high ranks
+beta_rank_matrix <- matrix(beta_ranks, nrow = 28, byrow = TRUE) # Reshape for visualization (28x28 pixels)
+visualize_beta_ranks(beta_rank_matrix)
+
 
 # Time-consuming! (3 mins) -> Solved by setting fixed values
-# FIXME: Falta meter result_49 el beta_value
+# Creating the beta_rank_matrix with the provided data
+# TODO: está mal sacada la matrix
+beta_ranks_49 <- c(
+  93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93,
+  93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93,
+  93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 198, 206, 195, 93, 220, 217, 199, 202, 93, 93, 93, 93, 93,
+  93, 93, 93, 93, 93, 93, 93, 93, 93, 223, 239, 234, 210, 263, 290, 273, 288, 311, 607, 343, 257, 245, 225, 226, 205, 188, 93, 93,
+  93, 93, 93, 93, 203, 232, 219, 214, 227, 244, 241, 259, 385, 389, 475, 615, 516, 414, 536, 433, 408, 363, 298, 323, 342, 297, 209, 93,
+  93, 93, 93, 197, 213, 246, 340, 377, 459, 467, 533, 411, 320, 636, 393, 537, 687, 269, 416, 367, 526, 464, 657, 670, 489, 303, 200, 93,
+  93, 93, 93, 208, 264, 518, 394, 296, 554, 506, 362, 652, 488, 560, 741, 760, 773, 751, 749, 585, 697, 432, 753, 679, 601, 339, 287, 93,
+  93, 93, 93, 251, 372, 674, 565, 482, 317, 293, 703, 710, 783, 775, 748, 762, 782, 655, 779, 664, 722, 678, 480, 633, 735, 512, 248, 93,
+  93, 93, 186, 305, 479, 619, 558, 662, 476, 330, 235, 593, 568, 777, 778, 727, 772, 765, 704, 548, 446, 676, 648, 421, 604, 528, 252, 93, 
+  93, 93, 192, 299, 469, 383, 502, 577, 352, 504, 551, 626, 594, 677, 781, 780, 730, 574, 327, 306, 427, 572, 483, 539, 608, 417, 250, 93,
+  93, 93, 215, 265, 466, 388, 387, 578, 503, 445, 540, 557, 473, 595, 776, 599, 353, 646, 668, 542, 374, 620, 628, 754, 696, 470, 258, 93,
+  93, 93, 406, 236, 364, 494, 587, 369, 685, 275, 653, 266, 752, 228, 699, 747, 728, 396, 645, 622, 732, 637, 365, 666, 658, 294, 284, 93,
+  93, 93, 307, 381, 550, 606, 714, 334, 249, 511, 556, 723, 784, 758, 660, 610, 328, 583, 625, 688, 632, 580, 592, 439, 643, 514, 310, 93, 
+  93, 93, 204, 458, 659, 441, 376, 301, 546, 611, 667, 736, 757, 371, 669, 322, 675, 423, 448, 501, 336, 438, 555, 271, 449, 472, 368, 93,
+  93, 93, 93, 434, 435, 500, 498, 712, 477, 661, 617, 651, 521, 513, 584, 614, 549, 280, 590, 618, 451, 510, 603, 302, 462, 337, 211, 93,
+  93, 93, 93, 419, 315, 373, 561, 425, 724, 742, 316, 698, 654, 324, 707, 553, 319, 544, 672, 683, 329, 605, 532, 515, 390, 270, 253, 189,
+  93, 93, 255, 621, 631, 428, 391, 746, 689, 497, 378, 496, 455, 527, 743, 726, 405, 509, 478, 684, 768, 766, 671, 616, 332, 237, 194, 191,
+  93, 93, 520, 630, 729, 579, 624, 531, 447, 640, 638, 256, 582, 650, 734, 508, 711, 291, 279, 602, 733, 686, 718, 596, 355, 230, 207, 190,
+  247, 93, 430, 647, 600, 566, 681, 348, 292, 313, 642, 538, 767, 700, 682, 612, 725, 384, 468, 644, 522, 341, 535, 491, 358, 426, 229, 187,
+  93, 93, 285, 552, 529, 530, 486, 402, 499, 410, 338, 719, 346, 691, 701, 755, 673, 333, 490, 721, 564, 569, 463, 314, 351, 453, 222, 93,
+  93, 93, 268, 318, 395, 507, 281, 350, 403, 440, 589, 627, 665, 409, 276, 375, 694, 484, 272, 397, 461, 420, 424, 304, 380, 429, 93, 93,
+  93, 93, 212, 242, 485, 543, 444, 361, 656, 262, 635, 581, 492, 570, 717, 243, 641, 471, 588, 412, 399, 382, 349, 415, 360, 240, 93, 93,
+  93, 93, 93, 238, 366, 386, 431, 325, 505, 623, 456, 401, 286, 442, 586, 609, 457, 639, 454, 597, 370, 326, 524, 460, 331, 277, 261, 93,
+  93, 93, 93, 233, 308, 517, 613, 740, 562, 437, 545, 519, 407, 523, 738, 534, 690, 474, 404, 649, 573, 379, 278, 295, 231, 283, 260, 93,
+  93, 93, 93, 93, 547, 567, 708, 705, 680, 398, 737, 634, 571, 576, 493, 713, 598, 392, 443, 274, 254, 218, 312, 309, 201, 282, 93, 93, 
+  93, 93, 193, 93, 345, 300, 663, 715, 764, 744, 422, 692, 739, 591, 695, 771, 693, 716, 756, 731, 495, 418, 450, 356, 216, 224, 93, 93,
+  93, 93, 93, 221, 413, 487, 289, 706, 745, 759, 770, 750, 763, 761, 769, 774, 720, 629, 709, 702, 525, 436, 452, 335, 196, 93, 93, 93,
+  93, 93, 93, 93, 93, 93, 354, 575, 559, 357, 563, 541, 481, 347, 344, 267, 321, 359, 465, 400, 93, 93, 93, 93, 93, 93, 93, 93
+)
+    
 result_49 <- list(accuracy = 0.977986348122867, lambda = 21.9758474587424)
 plot_beta_coef(result_49$lambda, digit_a, digit_b, train_nist)
+# Heatmap for beta coefficient
+beta_rank_matrix <- matrix(beta_ranks_49, nrow = 28, byrow = TRUE) # Reshape for visualization (28x28 pixels)
+visualize_beta_ranks(beta_rank_matrix)
 
 # Optional analysis - Comparing all digit pairs ------------------------------------
 
@@ -236,22 +274,6 @@ plot_beta_coef(result_ab$lambda, digit_a, digit_b, train_nist)
 # Some conclusion:
 # This show the magnitude and direction of the coefficients, indicating which 
 # pixels contribute more to the classification of digits 4 and 9.
-
-
-# TODO: Review this function, not working now
-# Exploration of pixels which contributed more to the model
-
-# 2. Heatmap of beta coefficients using show_digit function
-show_digit(x = beta_values, col = colorRampPalette(c("blue", "white", "red"))(256))
-
-# This will display the beta coefficients in the format of the digit image,
-# using a blue-white-red color scheme to indicate the strength and direction of 
-# each pixel's influence.
-
-# Conclusion:
-# The color gradient from blue (negative influence) through white (neutral) 
-# to red (positive influence) will intuitively show the areas of importance 
-# across the digit's shape.
 
 
 # Add References -------------------------------------------------------------------
