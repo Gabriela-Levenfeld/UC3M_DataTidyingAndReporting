@@ -51,7 +51,7 @@ Ridge logistic regression is a regularization technique used for classification 
 
 3.  **Model evaluation**. The performance of our trained model is assessed using a reserved test set. The evaluation metric is the accuracy, defined as the proportion of the number of correctly identified digits to the total number of digits in the test set.
 
-4. **Model visualization**. Through two plots, we are able to understand the model's strategy in distinguishing between digits. The `Estimated $\beta$ coefficient` shows the magnitude and direction of this parameter ($\beta$) over the pixel index ($28$x$28$=$784$ points). The higher the magnitude values, the greater their contribution is. Meanwhile, the `Average rank of $\beta$ coefficients` uses a gradient from white (no relevant) to blue (high relevant) to highlights the importance of each pixel for the model's decision, shown on a $28$x$28$ grid.
+4. **Model visualization**. Through two plots, we are able to understand the model's strategy in distinguishing between digits. The *Estimated $\beta$ coefficient* shows the magnitude and direction of this parameter ($\beta$) over the pixel index ($28$x$28$=$784$ points). The higher the magnitude values, the greater their contribution is. Meanwhile, the *Average rank of $\beta$ coefficients* uses a gradient from white (no relevant) to blue (high relevant) to highlights the importance of each pixel for the model's decision, shown on a $28$x$28$ grid.
 
 ## Results
 
@@ -209,11 +209,10 @@ beta_ranks_49 <- c(
   93, 93, 93, 221, 413, 487, 289, 706, 745, 759, 770, 750, 763, 761, 769, 774, 720, 629, 709, 702, 525, 436, 452, 335, 196, 93, 93, 93,
   93, 93, 93, 93, 93, 93, 354, 575, 559, 357, 563, 541, 481, 347, 344, 267, 321, 359, 465, 400, 93, 93, 93, 93, 93, 93, 93, 93
 )
-result_49 <- list(accuracy = 0.977986348122867, lambda = 21.9758474587424)
-percentage_49 <- (result_49$accuracy)*100
+result_49 <- list(percentage = 97.799, lambda = 21.9758474587424)
 ```
 
-The model classifier showcased a remarkable ability to differentiate between digits $4$ and $9$, achieving an accuracy of `r percentage_49`%. in this case, it is possible to identify the existence of two regions (corresponding to the blue area) whose relevance is greater. **Buscar 2 imágenes para ver a qué zonas puede corresponder estas zonas**
+The model classifier showcased a remarkable ability to differentiate between digits $4$ and $9$, achieving an accuracy of `r result_49$percentage`%. Two critical regions are identified over the blue areas. The left region, in particular, captures the curve of the digit $9$, contrasting with the peak characteristic of the digit $4$. 
 
 ```{r classification_4vs9_plot, echo=FALSE, out.width="50%"}
 plot_beta_coef(result_49$lambda, digit_a, digit_b, train_nist)
@@ -267,6 +266,7 @@ lowest_accuracy <- min(accuracy_matrix[accuracy_matrix > 0])
 lowest_position <- which(accuracy_matrix == lowest_accuracy, arr.ind = TRUE) - 1
 ```
 
+
 ```{r precomputed_lambda, eval=FALSE, include=FALSE}
 # Precomputed data: lambda, accuracy, and beta_ranks coefficients
 lambda_precomputed <- c(
@@ -310,6 +310,7 @@ print(accuracy_precomputed)
 
 # Getting some general insight
 average_accuracy <- sum(accuracy_precomputed[accuracy_precomputed > 0]) / 45 # 45 models are evaluated
+percentage_average <- average_accuracy*100
 
 highest_accuracy <- max(accuracy_precomputed[accuracy_precomputed > 0])
 percentage_best <- highest_accuracy*100
@@ -357,7 +358,7 @@ beta_ranks_precomputed <- c(
 visualize_beta_ranks(beta_ranks_precomputed)
 ```
 
-Classify one digit versus another involves the creation of $45$ different models. This approach yielded an incredible average accuracy of `r average_accuracy`%. Among these, the best performing was between digits `r highest_position[1]` and `r highest_position[2]`, achieving an accuracy of `r percentage_best`%. On the other hand, even the worst model obtained a `r percentage_lowest`% of accuracy which was obtained by digits `r lowest_position[1]` and `r lowest_position[2]`.
+Classify one digit versus another involves the creation of $45$ different models. This approach yielded an incredible average accuracy of `r percentage_average`%. Among these, the best performing was between digits `r highest_position[1]` and `r highest_position[2]`, achieving an accuracy of `r percentage_best`%. On the other hand, even the worst model obtained a `r percentage_lowest`% of accuracy which was obtained by digits `r lowest_position[1]` and `r lowest_position[2]`.
 
 The visualization of pixel importance across all classifications showcases a pattern: pixels within blue regions are most located in the central area of the images, indicating their crucial role in the definition of the shape of the digits. Conversely, areas in white which hold less importance, are typically found at the edges and corners of the images.
 
@@ -369,7 +370,5 @@ Lastly, it is important to mention that the report only include the main insight
 
 
 ## References
-
-Poner **references NECESARIAS** del paper y de los paquetes usados.
 
 <div id="refs"></div>
