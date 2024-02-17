@@ -18,14 +18,19 @@ train_and_evaluate <- function(digit_a, digit_b, train_data, test_data) {
   data_test <- prepare_data(test_data, c(digit_a, digit_b))
   
   # Perform cross-validation to find the optimal regularization parameter (lambda)
-  cv_model <- cv.glmnet(x = data_train$x, y = data_train$y, alpha = 0, family = "binomial",
-                        nfolds = 10, standardize = FALSE)
+  cv_model <- cv.glmnet(x = data_train$x, y = data_train$y, alpha = 0, family = "binomial", nfolds = 10, standardize = FALSE)
   
   lambda_optimal <- cv_model$lambda.min
   
   # Fit the model with the optimal lambda
-  model <- glmnet(x = data_train$x, y = data_train$y, alpha = 0, lambda = lambda_optimal, family = "binomial",
-                  standardize = FALSE)
+  model <- glmnet(
+    x = data_train$x,
+    y = data_train$y,
+    alpha = 0,
+    lambda = lambda_optimal, 
+    family = "binomial",
+    standardize = FALSE
+  )
   
   # Predict on test data and evaluate accuracy
   predictions <- predict(model, newx = data_test$x, s = lambda_optimal, type = "response")
@@ -156,18 +161,19 @@ beta_ranks_49 <- c(
 )
     
 result_49 <- list(accuracy = 0.977986348122867, lambda = 21.9758474587424)
+percentage_49 <- (result_49$accuracy)*100
 plot_beta_coef(result_49$lambda, digit_a, digit_b, train_nist)
-visualize_beta_ranks(beta_ranks_49) # Heatmap
+visualize_beta_ranks(beta_ranks_49)
 
 # Optional analysis - Comparing all digit pairs ------------------------------------
-
 digits <- 0:9
 
 # Initialize structures to store results
 lambda_optimals <- matrix(0, nrow = 10, ncol = 10, dimnames = list(digits, digits))
 accuracy_matrix <- matrix(0, nrow = 10, ncol = 10, dimnames = list(digits, digits))
+beta_aggregate <- numeric(784) # Image length 28x28
 
-# Iterate over all unique pairs of digits
+# Iterate over all unique pairs of digits -> This execution takes a while
 for(i in digits) {
   for(j in digits) {
     # Symmetric matrix
@@ -177,7 +183,7 @@ for(i in digits) {
       lambda_optimals[i+1, j+1] <- result$lambda
       beta_aggregate <- beta_aggregate + abs(result$beta_values) # Using absolute values for simplicity
       
-      print(paste(i, "_", j))
+      print(paste(i, "vs", j))
       print(paste("Accuracy: ", accuracy_matrix[i+1, j+1]))
       print(paste("Optimal lambda: ", lambda_optimals[i+1, j+1]))
       print(paste("Beta aggregate: ", beta_aggregate))
@@ -187,40 +193,72 @@ for(i in digits) {
 
 # Average beta values
 beta_aggregate <- beta_aggregate/(length(digits)*(length(digits)-1)/2)
-beta_ranks <- rank(beta_aggregate[,1], ties.method = "average") # Rank betas; high absolute values get high ranks
+beta_ranks <- rank(beta_aggregate, ties.method = "average") # Rank betas; high absolute values get high ranks
 visualize_beta_ranks(beta_ranks)
 
 print(lambda_optimals)
 print(accuracy_matrix)
 
+# Getting some general insight
+average_accuracy <- sum(accuracy_matrix[accuracy_matrix > 0]) / 45 # 45 models are evaluated
+
+highest_accuracy <- max(accuracy_matrix[accuracy_matrix > 0])
+highest_position <- which(accuracy_matrix == highest_accuracy, arr.ind = TRUE) - 1 # Index start at 1, digits goes 0-9
+
+lowest_accuracy <- min(accuracy_matrix[accuracy_matrix > 0])
+lowest_position <- which(accuracy_matrix == lowest_accuracy, arr.ind = TRUE) - 1
+
+
 # Precomputed data: lambda, accuracy, and beta_ranks coefficients
 lambda_precomputed <- c(
-  0, 11.72903, 35.984219, 20.63340, 8.438745, 15.188551, 10.398900, 4.786700, 39.540633, 19.647706,
-  0, 0, 4.386601, 14.72075, 9.055458, 4.542014, 7.198158, 5.834560, 18.191963, 5.250782,
-  0, 0, 0, 49.86109, 30.673030, 15.672550, 13.161608, 21.111556, 41.315761, 6.543830,
-  0, 0, 0, 0, 4.527115, 39.707292, 4.517932, 18.694359, 58.154696, 11.250051,
-  0, 0, 0, 0, 0, 7.386997, 12.079968, 12.924441, 22.558261, 21.975847,
-  0, 0, 0, 0, 0, 0, 23.899922, 4.110943, 54.588054, 21.540560,
-  0, 0, 0, 0, 0, 0, 0, 10.752439, 9.257947, 8.774185,
-  0, 0, 0, 0, 0, 0, 0, 0, 11.342793, 29.846691,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 23.762220,
+  0, 11.72903, 39.492636, 24.853003, 10.164498, 16.669416, 7.167558, 4.786700, 29.91104, 16.311870,
+  0, 0, 4.386601, 9.245058, 10.907331, 4.542014, 7.198158, 5.834560, 24.04870, 5.250782,
+  0, 0, 0, 49.861094, 33.663612, 15.672550, 10.926998, 19.236063, 34.30107, 5.962494,
+  0, 0, 0, 0, 4.527115, 39.707292, 4.517932, 20.517036, 52.98839, 13.550726,
+  0, 0, 0, 0, 0, 9.765175, 15.969006, 12.924441, 24.75766, 20.023574,
+  0, 0, 0, 0, 0, 0, 21.776718, 4.110943, 59.91032, 23.640739,
+  0, 0, 0, 0, 0, 0, 0, 10.752439, 11.15123, 8.774185,
+  0, 0, 0, 0, 0, 0, 0, 0, 10.33513, 35.950445,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 21.651250,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 )
 
+# Load precomputed data: lambda optimal
+lambda_data <- matrix(lambda_precomputed, nrow = 10, ncol = 10, byrow = TRUE)
+rownames(lambda_data) <- colnames(lambda_data) <- as.character(0:9) # Assign row and column names
+print(lambda_data)
+
 accuracy_precomputed <- c(
-  0, 0.9996938, 0.9927043, 0.9947343, 0.9973571, 0.9892808, 0.9933028, 0.9974579, 0.9934598, 0.9963648,
-  0, 0, 0.9979857, 0.9972532, 0.9987382, 0.9968699, 0.9992197, 0.9974164, 0.9901593, 0.9977911,
-  0, 0, 0, 0.9786718, 0.9897925, 0.9872064, 0.9900728, 0.9932432, 0.9819477, 0.9889521,
-  0, 0, 0, 0, 0.9970370, 0.9745047, 0.9980466, 0.9925574, 0.9719733, 0.9909435,
-  0, 0, 0, 0, 0, 0.9933834, 0.9946037, 0.9941003, 0.9935854, 0.9779863,
-  0, 0, 0, 0, 0, 0, 0.9897527, 0.9967421, 0.9759462, 0.9923077,
-  0, 0, 0, 0, 0, 0, 0, 0.9996759, 0.9938251, 0.9979757,
-  0, 0, 0, 0, 0, 0, 0, 0, 0.9943219, 0.9798361,
+  0, 0.9996938, 0.9925422, 0.9940961, 0.9971919, 0.9896266, 0.9931395, 0.9974579, 0.9936233, 0.9965301,
+  0, 0, 0.9979857, 0.9972532, 0.9987382, 0.9968699, 0.9992197, 0.9974164, 0.9900031, 0.9977911,
+  0, 0, 0, 0.9786718, 0.9897925, 0.9872064, 0.9900728, 0.9930824, 0.9816164, 0.9889521,
+  0, 0, 0, 0, 0.9970370, 0.9745047, 0.9980466, 0.9925574, 0.9718103, 0.9911082,
+  0, 0, 0, 0, 0, 0.9935622, 0.9947723, 0.9941003, 0.9935854, 0.9773038,
+  0, 0, 0, 0, 0, 0, 0.9895760, 0.9967421, 0.9759462, 0.9923077,
+  0, 0, 0, 0, 0, 0, 0, 0.9996759, 0.9939920, 0.9979757,
+  0, 0, 0, 0, 0, 0, 0, 0, 0.9943219, 0.9801639,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0.9890240,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 )
 
-beta_ranks <- c(
+# Load precomputed data: accuracy matrix
+accuracy_precomputed <- matrix(accuracy_precomputed, nrow = 10, ncol = 10, byrow = TRUE)
+rownames(accuracy_precomputed) <- colnames(accuracy_precomputed) <- as.character(0:9)
+print(accuracy_precomputed)
+
+# Getting some general insight
+average_accuracy <- sum(accuracy_precomputed[accuracy_precomputed > 0]) / 45 # 45 models are evaluated
+
+highest_accuracy <- max(accuracy_precomputed[accuracy_precomputed > 0])
+percentage_best <- highest_accuracy*100
+highest_position <- which(accuracy_precomputed == highest_accuracy, arr.ind = TRUE) - 1 # Index start at 1, digits goes 0-9
+
+lowest_accuracy <- min(accuracy_precomputed[accuracy_precomputed > 0])
+percentage_lowest <- lowest_accuracy*100
+lowest_position <- which(accuracy_precomputed == lowest_accuracy, arr.ind = TRUE) - 1
+
+
+beta_ranks_precomputed <- c(
   37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 120, 200, 205, 126, 37, 37, 37, 37,
   37, 37, 37, 37, 81, 86, 124, 141, 154, 161, 186, 166, 196, 176, 169, 228, 258, 233, 173, 209, 194, 162, 220, 181, 37, 37, 37,
   37, 37, 37, 75, 96, 122, 102, 133, 177, 207, 234, 262, 273, 259, 264, 266, 285, 302, 284, 294, 281, 236, 248, 230, 183, 164, 149, 37,
@@ -251,24 +289,14 @@ beta_ranks <- c(
   37, 37, 37, 37, 37, 80, 94, 134, 185, 187, 153, 203, 190, 201, 191, 193, 159, 171, 175, 208, 150, 104, 99, 85, 37, 37, 37, 37, 37
 )
 
-# Load precomputed data: lambda optimal
-lambda_data <- matrix(lambda_precomputed, nrow = 10, ncol = 10, byrow = TRUE)
-rownames(lambda_data) <- colnames(lambda_data) <- as.character(0:9) # Assign row and column names
-print(lambda_data)
-
-# Load precomputed data: accuracy matrix
-accuracy_data <- matrix(accuracy_precomputed, nrow = 10, ncol = 10, byrow = TRUE)
-rownames(accuracy_data) <- colnames(accuracy_data) <- as.character(0:9)
-print(accuracy_data)
-
 # Load precomputed data: beta rank coefficients
-visualize_beta_ranks(beta_ranks)
+visualize_beta_ranks(beta_ranks_precomputed)
 
 
 # Add References -------------------------------------------------------------------
 
 # Returns the names of all packages loaded in the current R session
-knitr::write_bib(.packages(), "references.bib")
+knitr::write_bib(.packages(), "prueba.bib")
 # Reference for a specific package
 toBibtex(citation("glmnet"))
 
