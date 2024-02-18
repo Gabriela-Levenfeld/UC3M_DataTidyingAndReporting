@@ -23,15 +23,13 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.bg = 't
 ```{r load_libraries, include=FALSE}
 library(glmnet)
 library(ggplot2)
-library(reshape2)
 
 #' Installation of required packages
 #' Before running this file, make sure you have the following packages installed:
 #' - glmnet
 #' - ggplot2
-#' - reshape2
 #' You can install these packages using the install.packages() function in R:
-#' install.packages(c("glmnet", "ggplot2", "reshape2"))
+#' install.packages(c("glmnet", "ggplot2"))
 ```
 
 
@@ -128,8 +126,12 @@ plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
 visualize_beta_ranks <- function(beta_ranks) {
   # Reshape for visualization (28x28 pixels)
   beta_rank_matrix <- matrix(beta_ranks, nrow = 28, byrow = TRUE)
+  # Convert matrix to data frame for ggplot2
+  beta_rank_df <- expand.grid(Var1 = 1:nrow(beta_rank_matrix), 
+                              Var2 = 1:ncol(beta_rank_matrix))
+  beta_rank_df$value <- as.vector(beta_rank_matrix)
   
-  ggplot(melt(beta_rank_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  ggplot(beta_rank_df, aes(x = Var1, y = Var2, fill = value)) +
     geom_tile() +
     scale_fill_gradient(low = "white", high = "blue", name = "Rank") +
     labs(title = expression(paste("Average rank of ", beta, " coefficients")),
@@ -327,7 +329,7 @@ lowest_position <- which(accuracy_precomputed == lowest_accuracy, arr.ind = TRUE
 
 The visualization of pixel importance across all classifications showcases a pattern: pixels within blue regions are most located in the central area of the images, indicating their crucial role in the definition of the shape of the digits. Conversely, areas in white which hold less importance, are typically found at the edges and corners of the images.
 
-```{r precomputed_beta_ranks, echo=FALSE, out.width="38%", fig.align = 'center'}
+```{r precomputed_beta_ranks, echo=FALSE, out.width="40%", fig.align = 'center'}
 beta_ranks_precomputed <- c(
   37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 120, 200, 205, 126, 37, 37, 37, 37,
   37, 37, 37, 37, 81, 86, 124, 141, 154, 161, 186, 166, 196, 176, 169, 228, 258, 233, 173, 209, 194, 162, 220, 181, 37, 37, 37,
