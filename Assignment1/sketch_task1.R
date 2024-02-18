@@ -299,5 +299,3 @@ visualize_beta_ranks(beta_ranks_precomputed)
 knitr::write_bib(.packages(), "prueba.bib")
 # Reference for a specific package
 toBibtex(citation("glmnet"))
-
-# TODO: Chapter 7 for documentation of the functions
