@@ -51,26 +51,49 @@ Ridge logistic regression is a regularization technique used for classification 
 
 4. **Model visualization**. Through two plots, we are able to understand the model's strategy in distinguishing between digits. The *Estimated $\beta$ coefficient* shows the magnitude and direction of this parameter ($\beta$) over the pixel index ($28$x$28$=$784$ points). The higher the magnitude values, the greater their contribution is. Meanwhile, the *Average rank of $\beta$ coefficients* uses a gradient from white (no relevant) to blue (high relevant) to highlights the importance of each pixel for the model's decision, shown on a $28$x$28$ grid.
 
-## Results
-
 ```{r utility_functions, echo=FALSE}
 # Functions --------------------------------------------------------------------
 
-# Prepare data for two specific digits and adapt it to glmnet format
+#' Prepare data for glmnet model
+#' 
+#' Filters a dataset for two specified digits and formats it for use with glmnet, 
+#' transforming pixel values to a matrix format and digit labels to a binary outcome.
+#' 
+#' @param data Dataset containing the digit images and labels.
+#' @param digits Vector of two elements indicating the digits to filter.
+#' @return A list with matrix 'x' of pixel values and vector 'y' of binary outcomes.
 prepare_data <- function(data, digits) {
-  ind <- data$digit %in% digits # For filtering 2 digits
+  ind <- data$digit %in% digits
   x <- as.matrix(data$px[ind, ])
   y <- ifelse(data$digit[ind] == as.numeric(digits[1]), 1, 0)
   list(x = x, y = y)
 }
 
-# Train and evaluate a model, and compute beta coefficients
+#' Train and evaluate a model, and compute beta coefficients
+#' 
+#' This function trains a logistic regression model using ridge regularization to classify
+#' between two specific digits. It performs cross-validation to find the optimal 
+#' regularization parameter (lambda), fits the model with this optimal lambda, predicts on
+#' a test dataset, evaluates accuracy, and extracts beta coefficients for the model.
+#'
+#' @param digit_a The first digit to classify.
+#' @param digit_b The second digit to classify.
+#' @param train_data Training dataset used for model fitting.
+#' @param test_data Test dataset used for model evaluation.
+#' @return A list containing the model's accuracy, optimal lambda, and beta values.
 train_and_evaluate <- function(digit_a, digit_b, train_data, test_data) {
   data_train <- prepare_data(train_data, c(digit_a, digit_b))
   data_test <- prepare_data(test_data, c(digit_a, digit_b))
 
-  # Perform cross-validation to find the optimal regularization parameter (lambda)
-  cv_model <- cv.glmnet(x = data_train$x, y = data_train$y, alpha = 0, family = "binomial", nfolds = 10, standardize = FALSE)
+  # Perform cross-validation to find the optimal lambda
+  cv_model <- cv.glmnet(
+    x = data_train$x, 
+    y = data_train$y, 
+    alpha = 0, 
+    family = "binomial", 
+    nfolds = 10, 
+    standardize = FALSE
+  )
 
   lambda_optimal <- cv_model$lambda.min
 
@@ -84,7 +107,7 @@ train_and_evaluate <- function(digit_a, digit_b, train_data, test_data) {
     standardize = FALSE
   )
 
-  # Predict on test data and evaluate accuracy
+  # Predict on the test data and evaluate its accuracy
   predictions <- predict(model, newx = data_test$x, s = lambda_optimal, type = "response")
   accuracy <- mean((predictions > 0.5) == data_test$y)
 
@@ -94,7 +117,16 @@ train_and_evaluate <- function(digit_a, digit_b, train_data, test_data) {
   list(accuracy = accuracy, lambda = lambda_optimal, beta_values = beta_values)
 }
 
-# Plot beta coefficients
+#' Plot beta coefficients
+#'
+#' Show the magnitude and direction of the beta coefficients over the pixel index,
+#' 784 pixels.
+#' 
+#' @param lambda_optimal The optimal lambda value for regularization chosen by 
+#' cross-validation.
+#' @param digit_a The first digit to classify.
+#' @param digit_b The second digit to classify.
+#' @param train_data Training dataset used to fit the model.
 plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
   data_train <- prepare_data(train_data, c(digit_a, digit_b))
   # Fit the model with the optimal lambda
@@ -106,11 +138,12 @@ plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
     family = "binomial",
     standardize = FALSE
   )
-  # Extract beta coefficients for the optimal lambda, excluding the intercept
+  
+  # Extract beta coefficients, excluding the intercept
   beta_values <- as.vector(coef(model, s = lambda_optimal)[-1])
   df_beta <- data.frame(PixelIndex = 1:length(beta_values), BetaValue = beta_values)
 
-  # Plot beta coefficients
+  # Create the plot
   ggplot(df_beta, aes(x = PixelIndex, y = BetaValue)) +
     geom_bar(stat = "identity") +
     theme_minimal() +
@@ -122,17 +155,24 @@ plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
     )
 }
 
-# Visualize average rank beta coefficients using a heatmap
+#' Visualize average rank of beta coefficients
+#'
+#' Creates a heatmap visualization of the average rank of beta coefficients on a 28x28 grid.
+#' The gradient from white (less relevant) to blue (more relevant) highlights the importance
+#' of each pixel for the model's decision.
+#'
+#' @param beta_ranks A vector of beta coefficient ranks.
 visualize_beta_ranks <- function(beta_ranks) {
-  # Reshape for visualization (28x28 pixels)
+  # Reshape into a 28x28 matrix for visualization
   beta_rank_matrix <- matrix(beta_ranks, nrow = 28, byrow = TRUE)
-  # Convert matrix to data frame for ggplot2
+  # Matrix into data frame for using ggplot2
   beta_rank_df <- expand.grid(
     Var1 = 1:nrow(beta_rank_matrix),
     Var2 = 1:ncol(beta_rank_matrix)
   )
   beta_rank_df$value <- as.vector(beta_rank_matrix)
 
+  # Create the plot  
   ggplot(beta_rank_df, aes(x = Var1, y = Var2, fill = value)) +
     geom_tile() +
     scale_fill_gradient(low = "white", high = "blue", name = "Rank") +
@@ -145,7 +185,13 @@ visualize_beta_ranks <- function(beta_ranks) {
     theme(plot.title = element_text(hjust = 0.5))
 }
 
-# Display digit image
+#' Display an image of a digit
+#'
+#' Display an image of a digit based on provided pixel values. The default color scheme 
+#' is scale of gray.
+#'
+#' @param x Vector of pixel values representing the digit image.
+#' @param col Color scheme for the image, defaults to gray scale.
 show_digit <- function(x, col = gray(255:1 / 255), ...) {
   l <- sqrt(length(x))
   image(matrix(as.numeric(x), nrow = l)[, l:1], col = col, ...)
@@ -158,6 +204,9 @@ show_digit <- function(x, col = gray(255:1 / 255), ...) {
 set.seed(42) # Ensures reproducibility
 load(file = "qmnist_nist.RData")
 ```
+
+
+## Results
 
 
 ```{r classification_AvsB, eval=FALSE, include=FALSE}
@@ -245,10 +294,7 @@ for (i in digits) {
       lambda_optimals[i + 1, j + 1] <- result$lambda
       beta_aggregate <- beta_aggregate + abs(result$beta_values) # Using absolute values for simplicity
 
-      print(paste(i, "vs", j))
-      print(paste("Accuracy: ", accuracy_matrix[i + 1, j + 1]))
-      print(paste("Optimal lambda: ", lambda_optimals[i + 1, j + 1]))
-      print(paste("Beta aggregate: ", beta_aggregate))
+      print(paste(i, "vs", j)) # To give feedback to the user
     }
   }
 }
@@ -263,10 +309,10 @@ print(accuracy_matrix)
 
 # Getting some general insight
 average_accuracy <- sum(accuracy_matrix[accuracy_matrix > 0]) / 45 # 45 models are evaluated
-# Highest accuracy and its position
+
 highest_accuracy <- max(accuracy_matrix[accuracy_matrix > 0])
 highest_position <- which(accuracy_matrix == highest_accuracy, arr.ind = TRUE) - 1 # Index start at 1, digits goes 0-9
-# Find the lowest accuracy and its position (excluding zeros)
+
 lowest_accuracy <- min(accuracy_matrix[accuracy_matrix > 0])
 lowest_position <- which(accuracy_matrix == lowest_accuracy, arr.ind = TRUE) - 1
 ```
