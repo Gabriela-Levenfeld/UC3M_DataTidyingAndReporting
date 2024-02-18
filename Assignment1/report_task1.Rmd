@@ -208,7 +208,6 @@ load(file = "qmnist_nist.RData")
 
 ## Results
 
-
 ```{r classification_AvsB, eval=FALSE, include=FALSE}
 # Example of classification task digit_a vs digit_b ----------------------------
 digit_a <- 4
@@ -266,6 +265,7 @@ beta_ranks_49 <- c(
 result_49 <- list(percentage = 97.799, lambda = 21.9758474587424)
 ```
 
+
 **$\text{\underline{4 vs 9 classifier}}$**. The model classifier showcased a remarkable ability to differentiate between digits $4$ and $9$, achieving an accuracy of `r result_49$percentage`%. Two critical regions are identified over the blue areas. The left region, in particular, captures the curve of the digit $9$, contrasting with the peak characteristic of the digit $4$. 
 
 ```{r classification_4vs9_plot, echo=FALSE, out.width="40%"}
@@ -274,52 +274,50 @@ visualize_beta_ranks(beta_ranks_49)
 ```
 
 
-
 ```{r classification_all_digits, eval=FALSE, include=FALSE}
 # Optional analysis - Comparing all digit pairs ------------------------------------
 digits <- 0:9
-
 # Initialize structures to store results
 lambda_optimals <- matrix(0, nrow = 10, ncol = 10, dimnames = list(digits, digits))
 accuracy_matrix <- matrix(0, nrow = 10, ncol = 10, dimnames = list(digits, digits))
-beta_aggregate <- numeric(784) # Image length 28x28
+beta_aggregate <- numeric(784) # For 28x28 images
 
 # Iterate over all unique pairs of digits -> This execution takes a while
 for (i in digits) {
   for (j in digits) {
-    # Symmetric matrix
+    # To ensure each pair is only evaluated once
     if (j > i) {
       result <- train_and_evaluate(i, j, train_nist, test_nist)
       accuracy_matrix[i + 1, j + 1] <- result$accuracy
       lambda_optimals[i + 1, j + 1] <- result$lambda
-      beta_aggregate <- beta_aggregate + abs(result$beta_values) # Using absolute values for simplicity
+      # Using absolute values for simplicity
+      beta_aggregate <- beta_aggregate + abs(result$beta_values)
 
-      print(paste(i, "vs", j)) # To give feedback to the user
+      print(paste(i, "vs", j)) # Progress feedback
     }
   }
 }
 
 # Average beta values
 beta_aggregate <- beta_aggregate / (length(digits) * (length(digits) - 1) / 2)
-beta_ranks <- rank(beta_aggregate, ties.method = "average") # Rank betas; high absolute values get high ranks
+beta_ranks <- rank(beta_aggregate, ties.method = "average")
 visualize_beta_ranks(beta_ranks)
 
 print(lambda_optimals)
 print(accuracy_matrix)
 
-# Getting some general insight
+# Compute some overall insight
 average_accuracy <- sum(accuracy_matrix[accuracy_matrix > 0]) / 45 # 45 models are evaluated
-
 highest_accuracy <- max(accuracy_matrix[accuracy_matrix > 0])
-highest_position <- which(accuracy_matrix == highest_accuracy, arr.ind = TRUE) - 1 # Index start at 1, digits goes 0-9
-
+# Index start at 1, digits goes 0-9
+highest_position <- which(accuracy_matrix == highest_accuracy, arr.ind = TRUE) - 1
 lowest_accuracy <- min(accuracy_matrix[accuracy_matrix > 0])
 lowest_position <- which(accuracy_matrix == lowest_accuracy, arr.ind = TRUE) - 1
 ```
 
 
 ```{r precomputed_lambda, eval=FALSE, include=FALSE}
-# Precomputed data: lambda, accuracy, and beta_ranks coefficients
+# Precomputed data: lambda
 lambda_precomputed <- c(
   0, 11.72903, 39.492636, 24.853003, 10.164498, 16.669416, 7.167558, 4.786700, 29.91104, 16.311870,
   0, 0, 4.386601, 9.245058, 10.907331, 4.542014, 7.198158, 5.834560, 24.04870, 5.250782,
@@ -333,7 +331,7 @@ lambda_precomputed <- c(
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 )
 
-# Load precomputed data: lambda optimal
+# Load precomputed: lambda optimal
 lambda_data <- matrix(lambda_precomputed, nrow = 10, ncol = 10, byrow = TRUE)
 rownames(lambda_data) <- colnames(lambda_data) <- as.character(0:9) # Assign row and column names
 print(lambda_data)
@@ -341,6 +339,7 @@ print(lambda_data)
 
 
 ```{r precomputed_accuracy, include=FALSE}
+# Precomputed data: accuracy
 accuracy_precomputed <- c(
   0, 0.9996938, 0.9925422, 0.9940961, 0.9971919, 0.9896266, 0.9931395, 0.9974579, 0.9936233, 0.9965301,
   0, 0, 0.9979857, 0.9972532, 0.9987382, 0.9968699, 0.9992197, 0.9974164, 0.9900031, 0.9977911,
@@ -354,30 +353,29 @@ accuracy_precomputed <- c(
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 )
 
-# Load precomputed data: accuracy matrix
+# Load precomputed: accuracy matrix
 accuracy_precomputed <- matrix(accuracy_precomputed, nrow = 10, ncol = 10, byrow = TRUE)
 rownames(accuracy_precomputed) <- colnames(accuracy_precomputed) <- as.character(0:9)
 print(accuracy_precomputed)
 
-# Getting some general insight
-average_accuracy <- sum(accuracy_precomputed[accuracy_precomputed > 0]) / 45 # 45 models are evaluated
+# Compute some overall insight
+average_accuracy <- sum(accuracy_precomputed[accuracy_precomputed > 0]) / 45
 percentage_average <- round(average_accuracy * 100, digits = 3)
-
 highest_accuracy <- max(accuracy_precomputed[accuracy_precomputed > 0])
 percentage_best <- round(highest_accuracy * 100, digits = 3)
-highest_position <- which(accuracy_precomputed == highest_accuracy, arr.ind = TRUE) - 1 # Index start at 1, digits goes 0-9
-
+highest_position <- which(accuracy_precomputed == highest_accuracy, arr.ind = TRUE) - 1
 lowest_accuracy <- min(accuracy_precomputed[accuracy_precomputed > 0])
 percentage_lowest <- round(lowest_accuracy * 100, digits = 3)
 lowest_position <- which(accuracy_precomputed == lowest_accuracy, arr.ind = TRUE) - 1
 ```
 
 
-**$\text{\underline{General classifier}}$**. Classify one digit versus another involves the creation of $45$ different models. This approach yielded an incredible average accuracy of `r percentage_average`%. Among these, the best performing was between digits `r highest_position[1]` and `r highest_position[2]`, achieving an accuracy of `r percentage_best`%. On the other hand, even the worst model obtained a `r percentage_lowest`% of accuracy which was obtained by digits `r lowest_position[1]` and `r lowest_position[2]`.
+**$\text{\underline{General classifier}}$**. Classify one digit versus another involves the creation of $45$ different models. This approach yielded an incredible average accuracy of `r percentage_average`%. Among these, the best performing was between digits `r highest_position[1]` and `r highest_position[2]`, achieving an accuracy of `r percentage_best`%. On the other hand, even the worst model gets a `r percentage_lowest`% of accuracy which was obtained by digits `r lowest_position[1]` and `r lowest_position[2]`.
 
 The visualization of pixel importance across all classifications showcases a pattern: pixels within blue regions are most located in the central area of the images, indicating their crucial role in the definition of the shape of the digits. Conversely, areas in white which hold less importance, are typically found at the edges and corners of the images.
 
 ```{r precomputed_beta_ranks, echo=FALSE, out.width="40%", fig.align = 'center'}
+# Precomputed data: beta ranks average for the 45 classification task
 beta_ranks_precomputed <- c(
   37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 120, 200, 205, 126, 37, 37, 37, 37,
   37, 37, 37, 37, 81, 86, 124, 141, 154, 161, 186, 166, 196, 176, 169, 228, 258, 233, 173, 209, 194, 162, 220, 181, 37, 37, 37,
@@ -409,15 +407,14 @@ beta_ranks_precomputed <- c(
   37, 37, 37, 37, 37, 80, 94, 134, 185, 187, 153, 203, 190, 201, 191, 193, 159, 171, 175, 208, 150, 104, 99, 85, 37, 37, 37, 37, 37
 )
 
-# Load precomputed data: beta rank coefficients
+# Heatmap for visualization beta rank coefficients
 visualize_beta_ranks(beta_ranks_precomputed)
 ```
 
 
 ## Conclusion
 
-The ridge logistic model has demonstrated an outstanding performance across all tasks, distinguishing greatly between pairs of digits. Therefore, it can be concluded that the chosen model is a great selection for this classification problem.
-Lastly, it is important to mention that this report focuses on presenting key insights and a comprehensive explanation, for those interested in the implementation details, the full code is available in the R Markdown script.
+The ridge logistic model has demonstrated an outstanding performance across all tasks, distinguishing greatly between pairs of digits. Therefore, it can be concluded that the chosen model is a great selection for this classification problem. Lastly, it is important to mention that this report focuses on presenting key insights and a comprehensive explanation. For those interested in the implementation details, the full code is available in the R Markdown script.
 
 
 ## References
