@@ -55,10 +55,10 @@ Ridge logistic regression is a regularization technique used for classification 
 # Functions --------------------------------------------------------------------
 
 #' Prepare data for glmnet model
-#' 
-#' Filters a dataset for two specified digits and formats it for use with glmnet, 
+#'
+#' Filters a dataset for two specified digits and formats it for use with glmnet,
 #' transforming pixel values to a matrix format and digit labels to a binary outcome.
-#' 
+#'
 #' @param data Dataset containing the digit images and labels.
 #' @param digits Vector of two elements indicating the digits to filter.
 #' @return A list with matrix 'x' of pixel values and vector 'y' of binary outcomes.
@@ -70,9 +70,9 @@ prepare_data <- function(data, digits) {
 }
 
 #' Train and evaluate a model, and compute beta coefficients
-#' 
+#'
 #' This function trains a logistic regression model using ridge regularization to classify
-#' between two specific digits. It performs cross-validation to find the optimal 
+#' between two specific digits. It performs cross-validation to find the optimal
 #' regularization parameter (lambda), fits the model with this optimal lambda, predicts on
 #' a test dataset, evaluates accuracy, and extracts beta coefficients for the model.
 #'
@@ -87,11 +87,11 @@ train_and_evaluate <- function(digit_a, digit_b, train_data, test_data) {
 
   # Perform cross-validation to find the optimal lambda
   cv_model <- cv.glmnet(
-    x = data_train$x, 
-    y = data_train$y, 
-    alpha = 0, 
-    family = "binomial", 
-    nfolds = 10, 
+    x = data_train$x,
+    y = data_train$y,
+    alpha = 0,
+    family = "binomial",
+    nfolds = 10,
     standardize = FALSE
   )
 
@@ -121,8 +121,8 @@ train_and_evaluate <- function(digit_a, digit_b, train_data, test_data) {
 #'
 #' Show the magnitude and direction of the beta coefficients over the pixel index,
 #' 784 pixels.
-#' 
-#' @param lambda_optimal The optimal lambda value for regularization chosen by 
+#'
+#' @param lambda_optimal The optimal lambda value for regularization chosen by
 #' cross-validation.
 #' @param digit_a The first digit to classify.
 #' @param digit_b The second digit to classify.
@@ -138,7 +138,7 @@ plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
     family = "binomial",
     standardize = FALSE
   )
-  
+
   # Extract beta coefficients, excluding the intercept
   beta_values <- as.vector(coef(model, s = lambda_optimal)[-1])
   df_beta <- data.frame(PixelIndex = 1:length(beta_values), BetaValue = beta_values)
@@ -172,7 +172,7 @@ visualize_beta_ranks <- function(beta_ranks) {
   )
   beta_rank_df$value <- as.vector(beta_rank_matrix)
 
-  # Create the plot  
+  # Create the plot
   ggplot(beta_rank_df, aes(x = Var1, y = Var2, fill = value)) +
     geom_tile() +
     scale_fill_gradient(low = "white", high = "blue", name = "Rank") +
@@ -187,7 +187,7 @@ visualize_beta_ranks <- function(beta_ranks) {
 
 #' Display an image of a digit
 #'
-#' Display an image of a digit based on provided pixel values. The default color scheme 
+#' Display an image of a digit based on provided pixel values. The default color scheme
 #' is scale of gray.
 #'
 #' @param x Vector of pixel values representing the digit image.
