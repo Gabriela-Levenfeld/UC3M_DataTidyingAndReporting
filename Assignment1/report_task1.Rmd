@@ -126,7 +126,8 @@ plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
 
 # Visualize average rank beta coefficients using a heatmap
 visualize_beta_ranks <- function(beta_ranks) {
-  beta_rank_matrix <- matrix(beta_ranks, nrow = 28, byrow = TRUE) # Reshape for visualization (28x28 pixels)
+  # Reshape for visualization (28x28 pixels)
+  beta_rank_matrix <- matrix(beta_ranks, nrow = 28, byrow = TRUE)
   
   ggplot(melt(beta_rank_matrix), aes(x = Var1, y = Var2, fill = value)) +
     geom_tile() +
@@ -153,7 +154,7 @@ load(file = "qmnist_nist.RData")
 ```
 
 
-**$\text{\underline{4 vs 9 classifier}}$**.
+
 
 ```{r classification_AvsB, eval=FALSE, include=FALSE}
 # Example of classification task digit_a vs digit_b ----------------------------
@@ -173,7 +174,7 @@ visualize_beta_ranks(beta_ranks)
 ```
 
 
-```{r classification_4vs9, echo=FALSE, out.width="50%"}
+```{r classification_4vs9, echo=FALSE}
 # Classification task 4 vs 9 ---------------------------------------------------
 digit_a <- 4
 digit_b <- 9
@@ -212,14 +213,14 @@ beta_ranks_49 <- c(
 result_49 <- list(percentage = 97.799, lambda = 21.9758474587424)
 ```
 
-The model classifier showcased a remarkable ability to differentiate between digits $4$ and $9$, achieving an accuracy of `r result_49$percentage`%. Two critical regions are identified over the blue areas. The left region, in particular, captures the curve of the digit $9$, contrasting with the peak characteristic of the digit $4$. 
+**$\text{\underline{4 vs 9 classifier}}$**. The model classifier showcased a remarkable ability to differentiate between digits $4$ and $9$, achieving an accuracy of `r result_49$percentage`%. Two critical regions are identified over the blue areas. The left region, in particular, captures the curve of the digit $9$, contrasting with the peak characteristic of the digit $4$. 
 
-```{r classification_4vs9_plot, echo=FALSE, out.width="50%"}
+```{r classification_4vs9_plot, echo=FALSE, out.width="40%"}
 plot_beta_coef(result_49$lambda, digit_a, digit_b, train_nist)
 visualize_beta_ranks(beta_ranks_49)
 ```
 
-**$\text{\underline{General classifier}}$**.
+
 
 ```{r classification_all_digits, eval=FALSE, include=FALSE}
 # Optional analysis - Comparing all digit pairs ------------------------------------
@@ -310,19 +311,23 @@ print(accuracy_precomputed)
 
 # Getting some general insight
 average_accuracy <- sum(accuracy_precomputed[accuracy_precomputed > 0]) / 45 # 45 models are evaluated
-percentage_average <- average_accuracy*100
+percentage_average <- round(average_accuracy * 100, digits = 3)
 
 highest_accuracy <- max(accuracy_precomputed[accuracy_precomputed > 0])
-percentage_best <- highest_accuracy*100
+percentage_best <- round(highest_accuracy * 100, digits = 3)
 highest_position <- which(accuracy_precomputed == highest_accuracy, arr.ind = TRUE) - 1 # Index start at 1, digits goes 0-9
 
 lowest_accuracy <- min(accuracy_precomputed[accuracy_precomputed > 0])
-percentage_lowest <- lowest_accuracy*100
+percentage_lowest <- round(lowest_accuracy * 100, digits = 3)
 lowest_position <- which(accuracy_precomputed == lowest_accuracy, arr.ind = TRUE) - 1
 ```
 
 
-```{r precomputed_beta_ranks, echo=FALSE, out.width="50%"}
+**$\text{\underline{General classifier}}$**. Classify one digit versus another involves the creation of $45$ different models. This approach yielded an incredible average accuracy of `r percentage_average`%. Among these, the best performing was between digits `r highest_position[1]` and `r highest_position[2]`, achieving an accuracy of `r percentage_best`%. On the other hand, even the worst model obtained a `r percentage_lowest`% of accuracy which was obtained by digits `r lowest_position[1]` and `r lowest_position[2]`.
+
+The visualization of pixel importance across all classifications showcases a pattern: pixels within blue regions are most located in the central area of the images, indicating their crucial role in the definition of the shape of the digits. Conversely, areas in white which hold less importance, are typically found at the edges and corners of the images.
+
+```{r precomputed_beta_ranks, echo=FALSE, out.width="38%", fig.align = 'center'}
 beta_ranks_precomputed <- c(
   37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 120, 200, 205, 126, 37, 37, 37, 37,
   37, 37, 37, 37, 81, 86, 124, 141, 154, 161, 186, 166, 196, 176, 169, 228, 258, 233, 173, 209, 194, 162, 220, 181, 37, 37, 37,
@@ -358,15 +363,11 @@ beta_ranks_precomputed <- c(
 visualize_beta_ranks(beta_ranks_precomputed)
 ```
 
-Classify one digit versus another involves the creation of $45$ different models. This approach yielded an incredible average accuracy of `r percentage_average`%. Among these, the best performing was between digits `r highest_position[1]` and `r highest_position[2]`, achieving an accuracy of `r percentage_best`%. On the other hand, even the worst model obtained a `r percentage_lowest`% of accuracy which was obtained by digits `r lowest_position[1]` and `r lowest_position[2]`.
-
-The visualization of pixel importance across all classifications showcases a pattern: pixels within blue regions are most located in the central area of the images, indicating their crucial role in the definition of the shape of the digits. Conversely, areas in white which hold less importance, are typically found at the edges and corners of the images.
-
 
 ## Conclusion
 
-The ridge logistic model has demonstrated an outstanding performance across all tasks, distinguishing greatly between pairs of digits. Therefore, it can be concluded that the chosen model is a great election for this classification problem.
-Lastly, it is important to mention that the report only include the main insight found as well as a comprehensive explanation. For more detailed information, please refer to the RMarkdown script with the same name.
+The ridge logistic model has demonstrated an outstanding performance across all tasks, distinguishing greatly between pairs of digits. Therefore, it can be concluded that the chosen model is a great selection for this classification problem.
+Lastly, it is important to mention that this report focuses on presenting key insights and a comprehensive explanation, for those interested in the implementation details, the full code is available in the R Markdown script.
 
 
 ## References
