@@ -17,7 +17,7 @@ linkcolor: blue
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.bg = 'transparent')
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.bg = "transparent")
 ```
 
 ```{r load_libraries, include=FALSE}
@@ -68,29 +68,29 @@ prepare_data <- function(data, digits) {
 train_and_evaluate <- function(digit_a, digit_b, train_data, test_data) {
   data_train <- prepare_data(train_data, c(digit_a, digit_b))
   data_test <- prepare_data(test_data, c(digit_a, digit_b))
-  
+
   # Perform cross-validation to find the optimal regularization parameter (lambda)
   cv_model <- cv.glmnet(x = data_train$x, y = data_train$y, alpha = 0, family = "binomial", nfolds = 10, standardize = FALSE)
-  
+
   lambda_optimal <- cv_model$lambda.min
-  
+
   # Fit the model with the optimal lambda
   model <- glmnet(
     x = data_train$x,
     y = data_train$y,
     alpha = 0,
-    lambda = lambda_optimal, 
+    lambda = lambda_optimal,
     family = "binomial",
     standardize = FALSE
-    )
-  
+  )
+
   # Predict on test data and evaluate accuracy
   predictions <- predict(model, newx = data_test$x, s = lambda_optimal, type = "response")
   accuracy <- mean((predictions > 0.5) == data_test$y)
-  
+
   # Extract beta coefficients, excluding the intercept
   beta_values <- as.vector(coef(model, s = lambda_optimal)[-1])
-  
+
   list(accuracy = accuracy, lambda = lambda_optimal, beta_values = beta_values)
 }
 
@@ -100,16 +100,16 @@ plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
   # Fit the model with the optimal lambda
   model <- glmnet(
     x = data_train$x,
-    y = data_train$y, 
-    alpha = 0, 
-    lambda = lambda_optimal, 
+    y = data_train$y,
+    alpha = 0,
+    lambda = lambda_optimal,
     family = "binomial",
     standardize = FALSE
   )
   # Extract beta coefficients for the optimal lambda, excluding the intercept
   beta_values <- as.vector(coef(model, s = lambda_optimal)[-1])
   df_beta <- data.frame(PixelIndex = 1:length(beta_values), BetaValue = beta_values)
-  
+
   # Plot beta coefficients
   ggplot(df_beta, aes(x = PixelIndex, y = BetaValue)) +
     geom_bar(stat = "identity") +
@@ -117,7 +117,7 @@ plot_beta_coef <- function(lambda_optimal, digit_a, digit_b, train_data) {
     theme(plot.title = element_text(hjust = 0.5)) +
     labs(
       title = expression(paste("Estimated ", beta, " coefficients")),
-      x = "Pixel index", 
+      x = "Pixel index",
       y = expression(paste(beta, " value"))
     )
 }
@@ -127,16 +127,20 @@ visualize_beta_ranks <- function(beta_ranks) {
   # Reshape for visualization (28x28 pixels)
   beta_rank_matrix <- matrix(beta_ranks, nrow = 28, byrow = TRUE)
   # Convert matrix to data frame for ggplot2
-  beta_rank_df <- expand.grid(Var1 = 1:nrow(beta_rank_matrix), 
-                              Var2 = 1:ncol(beta_rank_matrix))
+  beta_rank_df <- expand.grid(
+    Var1 = 1:nrow(beta_rank_matrix),
+    Var2 = 1:ncol(beta_rank_matrix)
+  )
   beta_rank_df$value <- as.vector(beta_rank_matrix)
-  
+
   ggplot(beta_rank_df, aes(x = Var1, y = Var2, fill = value)) +
     geom_tile() +
     scale_fill_gradient(low = "white", high = "blue", name = "Rank") +
-    labs(title = expression(paste("Average rank of ", beta, " coefficients")),
-         x = "Pixel column",
-         y = "Pixel row") +
+    labs(
+      title = expression(paste("Average rank of ", beta, " coefficients")),
+      x = "Pixel column",
+      y = "Pixel row"
+    ) +
     theme_minimal() +
     theme(plot.title = element_text(hjust = 0.5))
 }
@@ -154,8 +158,6 @@ show_digit <- function(x, col = gray(255:1 / 255), ...) {
 set.seed(42) # Ensures reproducibility
 load(file = "qmnist_nist.RData")
 ```
-
-
 
 
 ```{r classification_AvsB, eval=FALSE, include=FALSE}
@@ -191,11 +193,11 @@ beta_ranks_49 <- c(
   93, 93, 93, 197, 213, 246, 340, 377, 459, 467, 533, 411, 320, 636, 393, 537, 687, 269, 416, 367, 526, 464, 657, 670, 489, 303, 200, 93,
   93, 93, 93, 208, 264, 518, 394, 296, 554, 506, 362, 652, 488, 560, 741, 760, 773, 751, 749, 585, 697, 432, 753, 679, 601, 339, 287, 93,
   93, 93, 93, 251, 372, 674, 565, 482, 317, 293, 703, 710, 783, 775, 748, 762, 782, 655, 779, 664, 722, 678, 480, 633, 735, 512, 248, 93,
-  93, 93, 186, 305, 479, 619, 558, 662, 476, 330, 235, 593, 568, 777, 778, 727, 772, 765, 704, 548, 446, 676, 648, 421, 604, 528, 252, 93, 
+  93, 93, 186, 305, 479, 619, 558, 662, 476, 330, 235, 593, 568, 777, 778, 727, 772, 765, 704, 548, 446, 676, 648, 421, 604, 528, 252, 93,
   93, 93, 192, 299, 469, 383, 502, 577, 352, 504, 551, 626, 594, 677, 781, 780, 730, 574, 327, 306, 427, 572, 483, 539, 608, 417, 250, 93,
   93, 93, 215, 265, 466, 388, 387, 578, 503, 445, 540, 557, 473, 595, 776, 599, 353, 646, 668, 542, 374, 620, 628, 754, 696, 470, 258, 93,
   93, 93, 406, 236, 364, 494, 587, 369, 685, 275, 653, 266, 752, 228, 699, 747, 728, 396, 645, 622, 732, 637, 365, 666, 658, 294, 284, 93,
-  93, 93, 307, 381, 550, 606, 714, 334, 249, 511, 556, 723, 784, 758, 660, 610, 328, 583, 625, 688, 632, 580, 592, 439, 643, 514, 310, 93, 
+  93, 93, 307, 381, 550, 606, 714, 334, 249, 511, 556, 723, 784, 758, 660, 610, 328, 583, 625, 688, 632, 580, 592, 439, 643, 514, 310, 93,
   93, 93, 204, 458, 659, 441, 376, 301, 546, 611, 667, 736, 757, 371, 669, 322, 675, 423, 448, 501, 336, 438, 555, 271, 449, 472, 368, 93,
   93, 93, 93, 434, 435, 500, 498, 712, 477, 661, 617, 651, 521, 513, 584, 614, 549, 280, 590, 618, 451, 510, 603, 302, 462, 337, 211, 93,
   93, 93, 93, 419, 315, 373, 561, 425, 724, 742, 316, 698, 654, 324, 707, 553, 319, 544, 672, 683, 329, 605, 532, 515, 390, 270, 253, 189,
@@ -207,7 +209,7 @@ beta_ranks_49 <- c(
   93, 93, 212, 242, 485, 543, 444, 361, 656, 262, 635, 581, 492, 570, 717, 243, 641, 471, 588, 412, 399, 382, 349, 415, 360, 240, 93, 93,
   93, 93, 93, 238, 366, 386, 431, 325, 505, 623, 456, 401, 286, 442, 586, 609, 457, 639, 454, 597, 370, 326, 524, 460, 331, 277, 261, 93,
   93, 93, 93, 233, 308, 517, 613, 740, 562, 437, 545, 519, 407, 523, 738, 534, 690, 474, 404, 649, 573, 379, 278, 295, 231, 283, 260, 93,
-  93, 93, 93, 93, 547, 567, 708, 705, 680, 398, 737, 634, 571, 576, 493, 713, 598, 392, 443, 274, 254, 218, 312, 309, 201, 282, 93, 93, 
+  93, 93, 93, 93, 547, 567, 708, 705, 680, 398, 737, 634, 571, 576, 493, 713, 598, 392, 443, 274, 254, 218, 312, 309, 201, 282, 93, 93,
   93, 93, 193, 93, 345, 300, 663, 715, 764, 744, 422, 692, 739, 591, 695, 771, 693, 716, 756, 731, 495, 418, 450, 356, 216, 224, 93, 93,
   93, 93, 93, 221, 413, 487, 289, 706, 745, 759, 770, 750, 763, 761, 769, 774, 720, 629, 709, 702, 525, 436, 452, 335, 196, 93, 93, 93,
   93, 93, 93, 93, 93, 93, 354, 575, 559, 357, 563, 541, 481, 347, 344, 267, 321, 359, 465, 400, 93, 93, 93, 93, 93, 93, 93, 93
@@ -234,25 +236,25 @@ accuracy_matrix <- matrix(0, nrow = 10, ncol = 10, dimnames = list(digits, digit
 beta_aggregate <- numeric(784) # Image length 28x28
 
 # Iterate over all unique pairs of digits -> This execution takes a while
-for(i in digits) {
-  for(j in digits) {
+for (i in digits) {
+  for (j in digits) {
     # Symmetric matrix
-    if(j > i) {
+    if (j > i) {
       result <- train_and_evaluate(i, j, train_nist, test_nist)
-      accuracy_matrix[i+1, j+1] <- result$accuracy
-      lambda_optimals[i+1, j+1] <- result$lambda
+      accuracy_matrix[i + 1, j + 1] <- result$accuracy
+      lambda_optimals[i + 1, j + 1] <- result$lambda
       beta_aggregate <- beta_aggregate + abs(result$beta_values) # Using absolute values for simplicity
-      
+
       print(paste(i, "vs", j))
-      print(paste("Accuracy: ", accuracy_matrix[i+1, j+1]))
-      print(paste("Optimal lambda: ", lambda_optimals[i+1, j+1]))
+      print(paste("Accuracy: ", accuracy_matrix[i + 1, j + 1]))
+      print(paste("Optimal lambda: ", lambda_optimals[i + 1, j + 1]))
       print(paste("Beta aggregate: ", beta_aggregate))
     }
   }
 }
 
 # Average beta values
-beta_aggregate <- beta_aggregate/(length(digits)*(length(digits)-1)/2)
+beta_aggregate <- beta_aggregate / (length(digits) * (length(digits) - 1) / 2)
 beta_ranks <- rank(beta_aggregate, ties.method = "average") # Rank betas; high absolute values get high ranks
 visualize_beta_ranks(beta_ranks)
 
@@ -261,7 +263,7 @@ print(accuracy_matrix)
 
 # Getting some general insight
 average_accuracy <- sum(accuracy_matrix[accuracy_matrix > 0]) / 45 # 45 models are evaluated
-# Highes accuracy and its position
+# Highest accuracy and its position
 highest_accuracy <- max(accuracy_matrix[accuracy_matrix > 0])
 highest_position <- which(accuracy_matrix == highest_accuracy, arr.ind = TRUE) - 1 # Index start at 1, digits goes 0-9
 # Find the lowest accuracy and its position (excluding zeros)
