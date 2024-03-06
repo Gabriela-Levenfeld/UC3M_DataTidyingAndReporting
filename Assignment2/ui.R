@@ -28,7 +28,10 @@ fluidPage(
                            accept = c("image/png")),
                  selectInput(inputId = "classifierType",
                              label = "Choose classifier type",
-                             choices = c("Average Image", "SVM", "KNN", "RF"))
+                             choices = c("Average Image", "SVM", "KNN", "RF")),
+                 # GitHub link
+                 tags$a(href = "https://github.com/Gabriela-Levenfeld/UC3M_DataTidyingAndReporting/tree/main/Assignment2", target = "_blank",
+                        icon("github"), " Source Code")
                ),
                mainPanel(
                  imageOutput("digitImage"),

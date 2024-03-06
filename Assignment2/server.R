@@ -18,7 +18,6 @@ av_img_classifier <- function(vec_img) {
   which.min(colMeans((avg_train_images - vec_img)^2)) - 1
 }
 
-
 ## KNN --------------------------------------------------------------------------
 knn_model <- function(img, k = 3) {
   train_knn <- t(apply(train_nist$px, 1, as.numeric))
