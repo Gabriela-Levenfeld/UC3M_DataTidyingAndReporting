@@ -35,10 +35,10 @@ av_img_classifier <- function(vec_img) {
 }
 
 predictions_avg <- vector("numeric", length = nrow(test_nist))
-counter_good_pred <- 0 # contador
+counter_good_pred <- 0
 for(img_index in 1:nrow(test_nist)){
   current_img <- test_nist$px[img_index,]
-  prepared_img <- c(255 * t(current_img))
+  prepared_img <- c(t(current_img))
   predicted_digit <- av_img_classifier(prepared_img)
   predictions_avg[img_index] <- predicted_digit
   
@@ -113,7 +113,13 @@ gg <- ggplot(feature_grid, aes(x = col, y = row, fill = importance)) +
 ggplotly(gg)
 
 
+# CNN --------------------------------------------------------------------------
+library(keras)
 
+# Define a few parameters to be used in the CNN model
+batch_size <- 128
+num_classes <- 10
+epochs <- 10
 
 
 
