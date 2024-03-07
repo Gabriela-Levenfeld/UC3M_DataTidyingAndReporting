@@ -2,6 +2,7 @@ library(shiny)
 library(shinydashboard)
 
 dashboardPage(
+  skin = "blue",
   dashboardHeader(title = "Handwritten digit recognition",
                   tags$li(class = "dropdown",
                           tags$a(href = "https://github.com/Gabriela-Levenfeld/UC3M_DataTidyingAndReporting/tree/main/Assignment2",
@@ -11,19 +12,27 @@ dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("Get Started", tabName = "getStarted"),
-      menuItem("Prediction", tabName = "prediction")
+      menuItem("Analyze Digit", tabName = "prediction")
     )
   ),
   dashboardBody(
     tags$head(tags$style(HTML("
-      .shiny-image-output { 
-        text-align: center; 
+      /* Adjust fluidRow margins */
+      .row {
+      margin-bottom: 5px; /* Reduce the bottom margin of each row */
       }
-      .shiny-image-output img {
-        max-width: 100%; 
-        max-height: 400px; /* Adjust based on your preference */
+      #prediction {
+      font-size: 18px; /* Adjust font size */
+      font-weight: bold; /* Make it bold */
+      color: #333; /* Change the color */
+      }
+      .custom-image-container img {
+        width: 100%; 
         height: auto; 
-        width: auto;
+        max-height: 400px; 
+        display: block; 
+        margin-left: auto; 
+        margin-right: auto;
       }
       /* Custom CSS for valueBox to ensure it takes up more width */
       .value-box {
@@ -44,31 +53,40 @@ dashboardPage(
               p("4. View the prediction and metrics about the model's accuracy.")),
       tabItem(tabName = "prediction",
               fluidRow(
-                column(6,  # Half width for the image display
-                       imageOutput("digitImage")
+                column(3,
+                       fileInput("imageInput", "Choose PNG image", accept = c("image/png")),
+                       selectInput("classifierType", "Choose classifier type",
+                                   choices = c("Average Image", "K-Nearest Neighbors", "Random Forest")),
+                       actionButton("predictButton", "Make Prediction")
                 ),
-                column(6,  # Half width for the prediction display
-                       verbatimTextOutput("prediction")
+                column(6,
+                       box(
+                         title = "Uploaded image",
+                         status = "primary",
+                         solidHeader = TRUE,
+                         collapsible = FALSE,
+                         width = NULL,
+                         align = "center",
+                         div(class = "custom-image-container", imageOutput("digitImage"))
+                       )
+                ),
+                column(3,
+                       box(
+                         title = "Prediction Result",
+                         status = "primary",
+                         solidHeader = TRUE,
+                         collapsible = FALSE,
+                         width = NULL,
+                         align = "center",
+                         uiOutput("prediction", style = "text-align:center;")
+                       )
                 )
               ),
               fluidRow(
-                column(3,  # Adjust the width of the sidebar equivalent if needed
-                       fileInput("imageInput", "Choose PNG image", accept = c("image/png")),
-                       selectInput("classifierType", "Choose classifier type",
-                                   choices = c("Average Image", "KNN", "Random Forest"))
-                ),
-                column(9,  # Adjust the width of the main panel equivalent
-                       box(
-                         title = "Model Metrics",
-                         status = "primary",
-                         solidHeader = TRUE,
-                         collapsible = TRUE,
-                         width = 12,  # Here we set the box to take the full width of the column
-                         valueBoxOutput("modelAccuracyBox")
-                       )
+                column(12,uiOutput("modelSummaryUI")
                 )
               )
-      )
+        )
     )
   )
 )
