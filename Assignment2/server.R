@@ -67,7 +67,7 @@ get_model_explanation <- function(classifierType) {
 
 
 # Server -----------------------------------------------------------------------
-shinyServer(function(input, output,session) {
+shinyServer(function(input, output, session) {
   predictionMade <- reactiveVal(FALSE)
   
   prediction <- eventReactive(input$predictButton,{

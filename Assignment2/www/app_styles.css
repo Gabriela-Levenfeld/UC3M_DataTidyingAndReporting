@@ -1,0 +1,22 @@
+/* Adjust fluidRow margins */
+.row {
+  margin-bottom: 5px; /* Reduce the bottom margin of each row */
+}
+#prediction {
+  font-size: 18px; /* Adjust font size */
+  font-weight: bold; /* Make it bold */
+  color: #333; /* Change the color */
+}
+.custom-image-container img {
+  width: 100%; 
+  height: auto; 
+  max-height: 400px; 
+  display: block; 
+  margin-left: auto; 
+  margin-right: auto;
+}
+/* Custom CSS for valueBox to ensure it takes up more width */
+.value-box {
+  width: 100%;
+  margin-bottom: 15px;
+}
