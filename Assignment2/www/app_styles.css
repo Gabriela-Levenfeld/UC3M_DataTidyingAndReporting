@@ -2,6 +2,7 @@
 .row {
   margin-bottom: 5px; /* Reduce the bottom margin of each row */
 }
+
 #prediction {
   font-size: 18px; /* Adjust font size */
   font-weight: bold; /* Make it bold */
