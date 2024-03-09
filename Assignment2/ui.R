@@ -27,7 +27,7 @@ dashboardPage(
   dashboardBody(
     tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "app_styles.css")),
     tabItems(
-      tabItem(tabName = "getStarted", 
+      tabItem(tabName = "getStarted",
               fluidRow(
                 tags$img(src = "uc3m_logo.svg", height = "50px", style = "float: right;"),
                 tags$h4("Data Tidying and Reporting - Task 2", style = "margin-left: 60px; line-height: 50px; font-style: italic;"),
