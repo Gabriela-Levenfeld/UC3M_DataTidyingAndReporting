@@ -9,6 +9,7 @@ source("app_utils.R")
 
 # Server -----------------------------------------------------------------------
 shinyServer(function(input, output, session) {
+  # Analyze Digit tab ----------------------------------------------------------
   predictionMade <- reactiveVal(FALSE) # Tracking if a prediction has been made
   
   prediction <- eventReactive(input$predictButton,{
@@ -26,7 +27,9 @@ shinyServer(function(input, output, session) {
       process_image(input$imageInput$datapath)
     }, error = function(e) {
       # Display an error notification if processing fails
-      showNotification("Error processing image: Make sure it's a proper PNG image.", type = "error", duration = NULL)
+      showNotification("Error processing image: Make sure it's a proper PNG image.",
+                       type = "error", 
+                       duration = NULL)
       return(NULL) # Return NULL to halt further execution
     })
     
@@ -110,13 +113,17 @@ shinyServer(function(input, output, session) {
   })
   
   # Model performance tab ------------------------------------------------------
+  # Without icon -> No re-used code for analyzeDigit tab
   render_custom_box <- function(id, model_name) {
     output[[id]] <- renderUI({
       accuracy <- get_accuracy(model_name)
       tags$div(class = "custom-value-box",
-               style = ifelse(accuracy > 0.9, "background-color: #008000;", "background-color: #ffab00;"),
+               style = ifelse(accuracy > 0.9, 
+                              "background-color: #008000;", 
+                              "background-color: #ffab00;"),
                tags$div(class = "custom-value-box-content",
-                        tags$h3(scales::percent(accuracy, accuracy = 0.01), class = "custom-value-box-number"),
+                        tags$h3(scales::percent(accuracy, accuracy = 0.01), 
+                                class = "custom-value-box-number"),
                         tags$h4(model_name, class = "custom-value-box-title")
                )
       )
@@ -134,21 +141,21 @@ shinyServer(function(input, output, session) {
     confMatrix <- get_confusion_matrix(input$modelChoice)
     
     # Transform the matrix to long format
-    confMatrixLong <- reshape2::melt(as.matrix(confMatrix), varnames = c("Predicted", "Actual"))
+    confMatrixLong <- reshape2::melt(as.matrix(confMatrix),
+                                     varnames = c("Predicted", "Actual"))
     confMatrixLong$value <- as.numeric(confMatrixLong$value) # Forcing a numeric data type
 
-    # Define the class labels
-    class_labels <- as.character(0:9)
+    class_labels <- as.character(0:9) # For printing digits as a label
     
-    # Plot confusion matrix using ggplot2
+    # Plot using ggplot2
     ggplot(data = confMatrixLong, aes(x = Actual, y = Predicted, fill = value)) +
       geom_tile(color = "white") +
       geom_text(aes(label = value), color = "black", size = 4, vjust = 1) + # Add each value in the cell
       scale_fill_gradient(low = "white", 
                           high = "blue", 
                           limits = c(0, max(confMatrixLong$value, na.rm = TRUE))) + # For blue color gradient
-      scale_x_continuous(breaks = seq(0, 9, by = 1), labels = 0:9) +  # Set label in the center of cell
-      scale_y_continuous(breaks = seq(0, 9, by = 1), labels = 0:9) +  # Set label in the center of cell
+      scale_x_continuous(breaks = seq(0, 9, by = 1), labels = 0:9) +  # Center label digit in axis
+      scale_y_continuous(breaks = seq(0, 9, by = 1), labels = 0:9) +  # Center label digit in axis
       theme_minimal() +
       labs(x = 'Actual', y = 'Predicted', fill = 'Count') +
       ggtitle(paste("Confusion matrix:", input$modelChoice))

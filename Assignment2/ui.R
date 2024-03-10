@@ -30,7 +30,8 @@ dashboardPage(
       tabItem(tabName = "getStarted",
               fluidRow(
                 tags$img(src = "uc3m_logo.svg", height = "50px", style = "float: right;"),
-                tags$h4("Data Tidying and Reporting - Task 2", style = "margin-left: 60px; line-height: 50px; font-style: italic;"),
+                tags$h4("Data Tidying and Reporting - Task 2",
+                        style = "margin-left: 60px; line-height: 50px; font-style: italic;"),
                 div(style = "clear: both;")
               ),
               includeMarkdown("www/aboutApp.md")
@@ -79,8 +80,10 @@ dashboardPage(
               fluidRow(
                 div(class = "well",
                     p(tags$strong("Model evaluation"), style = "text-align: center;"),
-                    p("Accuracy is defined as the proportion of correctly predicted digits to the total number of digit images evaluated.", style = "text-align: center;"),
-                    p("To compute this metric, it has been used a reserved test set containing 30450 images that the model had not seen during training, ensuring a reliable assessment of its performance.", style = "text-align: center;"),
+                    p("Accuracy is defined as the proportion of correctly predicted digits to the total number of digit images evaluated.", 
+                      style = "text-align: center;"),
+                    p("To compute this metric, it has been used a reserved test set containing 30450 images that the model had not seen during training, ensuring a reliable assessment of its performance.", 
+                      style = "text-align: center;"),
                     style = "text-align: center;"
                 )
               ),
@@ -93,7 +96,7 @@ dashboardPage(
                          uiOutput("accuracyKnnBox", style = "flex: 1;")
                        )
                       ),
-                style = "padding-bottom: 20px;" # Add padding at the bottom
+                style = "padding-bottom: 20px;" # Add extra space at the bottom
               ),
               fluidRow(
                 column(width = 8,

@@ -8,6 +8,8 @@ library(randomForest)
 load(file = "qmnist_nist.RData")
 
 # Classifier Functions ---------------------------------------------------------
+# Random Forest is pre-computed
+
 # Average Image Classifier
 avg_train_images <- sapply(0:9, function(d) {
   colMeans(train_nist$px[train_nist$digit == d, ])
@@ -51,8 +53,8 @@ handle_notifications <- function(input, prediction){
   if (is.null(input$imageInput)) {
     showNotification("Please upload an image file to make a prediction.",
                      type = "error",
-                     duration = 5)
-    return()  # Stop further execution
+                     duration = 5) # Display for 5 seconds
+    return() # Stop further execution
   }
   
   # Check for PNG file format
@@ -60,17 +62,17 @@ handle_notifications <- function(input, prediction){
   if (ext != "png") {
     showNotification("Only PNG images are supported, please upload a PNG file.",
                      type = "error",
-                     duration = NULL) # Display for 5 seconds
+                     duration = NULL) # Live forever, the user must closed by hand
     return() # Stop further execution
   }
   
-  # If a PNG image is uploaded, proceed to show a waiting notification
+  # If a PNG image is uploaded, proceed to show a waiting notification (KNN)
   id_notification <- showNotification("Computing prediction, please wait...",
                                       type = "message",
                                       duration = NULL,
                                       closeButton = FALSE)
   prediction() # Make the prediction
-  removeNotification(id_notification)
+  removeNotification(id_notification) # Force to closed the notification
 }
 
 # Performance function for models ----------------------------------------------
@@ -94,7 +96,7 @@ get_model_explanation <- function(classifierType) {
   explanations[[classifierType]]
 }
 
-# Load precomputed confusion matrix of the selected classifier
+# Load pre-computed confusion matrix of the selected classifier
 get_confusion_matrix <- function(modelType) {
   switch(modelType,
          "Average Image" = readRDS("precomputed_data/avg_conf_mat.rds"),

@@ -5,11 +5,13 @@ library(plotly)
 library(shapr)
 library(randomForest)
 library(class) # For knn
+library(png) # For test images creation
+
 
 # Load data --------------------------------------------------------------------
 load(file = "qmnist_nist.RData")
 
-# Set up parallel processing
+# Set up parallel processing -> improve the efficiency of the R session
 registerDoParallel(cores = detectCores())
 
 train_data <- as.matrix(train_nist$px) # Feature matrix
@@ -22,7 +24,9 @@ if (!dir.exists(folder_path)) {
   dir.create(folder_path)
 }
 
-# Professor classifier ---------------------------------------------------------
+
+# Classifiers ------------------------------------------------------------------
+## Professor classifier --------------------------------------------------------
 avg_train_images <- sapply(0:9, function(d) {
   colMeans(train_nist$px[train_nist$digit == d, ])
 })
@@ -52,8 +56,8 @@ saveRDS(accuracy_avg, file="precomputed_data/avg_accuracy.rds")
 conf_mat_avg <- table(Predicted = predictions_avg, Actual = test_nist$digit)
 saveRDS(conf_mat_avg, file = "precomputed_data/avg_conf_mat.rds")
 
-# KNN --------------------------------------------------------------------------
-# Model is implemented inside the shiny app, these are just for precomputed data
+## KNN -------------------------------------------------------------------------
+# Model is implemented inside the shiny app, these are just for pre-computed data
 prediction_knn <- knn(train=train_nist$px,
                       test= test_nist$px, 
                       cl=train_nist$digit,
@@ -66,13 +70,8 @@ saveRDS(accuracy_knn, file="precomputed_data/knn_accuracy.rds")
 conf_mat_knn <- table(Predicted = prediction_knn, Actual = test_nist$digit)
 saveRDS(conf_mat_knn, file = "precomputed_data/knn_conf_mat.rds")
 
-# Random Forest model ----------------------------------------------------------
-# Tiempo en ejecutar: 4 mins
-# rf_model <- randomForest(x=as.matrix(train_nist$px),
-#                          y=as.factor(train_nist$digit),
-#                          ntree=100)
-
-# Tiempo en ejecutar: 14 mins
+## Random Forest model ---------------------------------------------------------
+# Time-consuming for a shiny app
 rf_model <- randomForest(x=train_data,
                          y=labels,
                          ntree=100, 
@@ -97,13 +96,32 @@ feature_importance <- importance(rf_model)
 saveRDS(importance, file = "precomputed_data/rf_importance.rds")
 
 
+# Test images for app ----------------------------------------------------------
+## Create png test images ------------------------------------------------------
+# Save images from the test dataset using writePNG()
+for (i in 0:9) {
+  # Matrix with 0-1 entries
+  img_vec <- test_nist$px[which(test_nist$digit == i)[1], ] / 255
+  img_mat <- matrix(as.numeric(img_vec), nrow = 28, ncol = 28,
+                    byrow = TRUE) # Saves it with the right orientation
+  # Save image
+  writePNG(image = img_mat, target = paste0("test-", i, ".png"))
+}
 
-# Plot for aboutApp.md ---------------------------------------------------------
-library(ggplot2)
+## Check that the image is fine ------------------------------------------------
+# Read image
+test_d <- 7 # Change me
+test_img <- readPNG(paste0("test-", test_d, ".png"))
+# Vectors with pixel values
+vec_with_original_img <- test_nist$px[which(test_nist$digit == test_d)[1], ] # Imagen original, solo sirve para luego comprobar que se han creado bien
+vec_with_read_img <- c(255 * t(test_img)) # Use scale 0-255 and flatten the
+# rotated image so that the layout is comparable to $px
+# The same!
+max(abs(vec_with_original_img - vec_with_read_img)) # 0 -> indica que no hay diferencia entre la original y la creada
+par(mfrow = c(1, 1))
+show_digit(vec_with_original_img, axes = FALSE)
 
-ggplot(data.frame(train_nist$digit), aes(x = factor(train_nist$digit))) +
-  geom_bar(fill = "steelblue") +
-  geom_text(stat = 'count', aes(label = ..count..), vjust = -0.25) +
-  labs(title = "Frequency of Each Digit in the Dataset",
-       x = "Digit") +
-  theme_minimal()
+
+show_digit(vec_with_read_img, axes = FALSE)
+# Classify
+classifier(vec_with_read_img) # Success!
