@@ -75,7 +75,31 @@ dashboardPage(
           column(12, uiOutput("modelSummaryUI"))
         )
       ),
-      tabItem(tabName = "modelPerformance")
+      tabItem(tabName = "modelPerformance",
+              fluidRow(
+                div(class = "well",
+                    p(tags$strong("Model evaluation"), style = "text-align: center;"),
+                    p("Accuracy is defined as the proportion of correctly predicted digits to the total number of digit images evaluated.", style = "text-align: center;"),
+                    p("To compute this metric, it has been used a reserved test set containing 30450 images that the model had not seen during training, ensuring a reliable assessment of its performance.", style = "text-align: center;"),
+                    style = "text-align: center;"
+                )
+              ),
+              fluidRow(
+                column(width = 12,
+                       div(
+                         style = "display: flex; justify-content: space-around;", # Flexbx for centering
+                         uiOutput("accuracyAvgBox", style = "flex: 1;"), # Each box will take equal space
+                         uiOutput("accuracyRfBox", style = "flex: 1;"),
+                         uiOutput("accuracyKnnBox", style = "flex: 1;")
+                       )
+                      )
+              ),
+              fluidRow(
+                selectInput("modelChoice", "Choose model to view confusion matrix:",
+                            choices = c("Average Image", "K-Nearest Neighbors", "Random Forest")),
+                plotOutput("confMatrixPlot") # Placeholder for the confusion matrix plot
+      )
+              )
     )
   )
 )

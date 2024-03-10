@@ -1,12 +1,12 @@
-/* Adjust fluidRow margins */
+/* fluidRow margins */
 .row {
   margin-bottom: 5px; /* Reduce the bottom margin of each row */
 }
 
 #prediction {
-  font-size: 18px; /* Adjust font size */
-  font-weight: bold; /* Make it bold */
-  color: #333; /* Change the color */
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
 }
 .custom-image-container img {
   width: 100%; 
@@ -16,8 +16,34 @@
   margin-left: auto; 
   margin-right: auto;
 }
-/* Custom CSS for valueBox to ensure it takes up more width */
+
+/* To ensure it takes up more width */
 .value-box {
   width: 100%;
   margin-bottom: 15px;
+}
+
+/* Accuracy boxes for Model performance tab */
+.custom-value-box {
+  padding: 10px;
+  color: white; /* Letters and Number in white color */
+  border-radius: 4px; /* Rounded corners */
+  margin-bottom: 10px; /* Space between boxes */
+  min-width: 200px; /* Minimum width of each box */
+  max-width: 300px; /* Maximum width of each box */
+  margin: 0 10px; /* Adds margin to left and right for spacing */
+}
+
+.custom-value-box-content {
+  text-align: center; /* Center the content */
+}
+
+.custom-value-box-number {
+  font-size: 32px; /* Large number size */
+  margin: 0; /* Remove default margins */
+}
+
+.custom-value-box-title {
+  font-size: 20px; /* Title size */
+  margin-top: 5px; /* Space between number and title */
 }

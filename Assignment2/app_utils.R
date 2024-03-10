@@ -1,7 +1,6 @@
 # Load materials ---------------------------------------------------------------
 # Libraries
 library(png)
-library(caret)
 library(class) # For KNN
 library(randomForest)
 
@@ -22,7 +21,6 @@ av_img_classifier <- function(vec_img) {
 knn_model <- function(img, k = 3) {
   train_knn <- t(apply(train_nist$px, 1, as.numeric))
   prediction <- knn(train_knn, as.numeric(img), train_nist$digit, k = k)
-  return(prediction)
 }
 
 # Customize functions ----------------------------------------------------------
@@ -43,7 +41,7 @@ make_prediction <- function(processed_img, classifierType) {
            rf_model <- readRDS("precomputed_data/rf_model.rds")
            predict(rf_model, newdata = t(processed_img))
          },
-         NA # Default or error case
+         NA # Default case
   )
 }
 
@@ -53,7 +51,7 @@ get_accuracy <- function (classifierType) {
           "Average Image" = readRDS("precomputed_data/avg_accuracy.rds"),
           "K-Nearest Neighbors" = readRDS("precomputed_data/knn_accuracy.rds"),
           "Random Forest" = readRDS("precomputed_data/rf_accuracy.rds"),
-          NA
+          NA # Default case
   )
 }
 
@@ -93,4 +91,14 @@ handle_notifications <- function(input, prediction){
                                       closeButton = FALSE)
   prediction() # Make the prediction
   removeNotification(id_notification)
+}
+
+# Model performance tab --------------------------------------------------------
+get_confusion_matrix <- function(classifierType) {
+  conf_matrices <- list(
+    #"Average Image" = readRDS("conf_matrix_avg.rds"),
+    #"K-Nearest Neighbors" = readRDS("conf_matrix_knn.rds"),
+    "Random Forest" = readRDS("rf_conf_mat.rds")
+  )
+  conf_matrices[[classifierType]]
 }

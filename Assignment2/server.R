@@ -1,6 +1,8 @@
 # Load materials ---------------------------------------------------------------
 # Packages
 library(shiny)
+library(ggplot2)
+library(reshape2)
 
 # Load required script
 source("app_utils.R")
@@ -105,5 +107,37 @@ shinyServer(function(input, output, session) {
   # Show notifications based on user actions
   observeEvent(input$predictButton, {
     handle_notifications(input, prediction)
+  })
+  
+  # Model performance tab ------------------------------------------------------
+  render_custom_box <- function(id, model_name) {
+    output[[id]] <- renderUI({
+      accuracy <- get_accuracy(model_name)
+      tags$div(class = "custom-value-box",
+               style = ifelse(accuracy > 0.9, "background-color: #008000;", "background-color: #ffab00;"),
+               tags$div(class = "custom-value-box-content",
+                        tags$h3(scales::percent(accuracy, accuracy = 0.01), class = "custom-value-box-number"),
+                        tags$h4(model_name, class = "custom-value-box-title")
+               )
+      )
+    })
+  }
+  # Model accuracy outputs
+  render_custom_box("accuracyAvgBox", "Average Image")
+  render_custom_box("accuracyKnnBox", "K-Nearest Neighbors")
+  render_custom_box("accuracyRfBox", "Random Forest")
+  
+  # Confusion matrix plot
+  output$confMatrixPlot <- renderPlot({
+    confMatrix <- get_confusion_matrix(input$classifierType)
+    if (is.null(confMatrix)) return()
+    
+    # Assuming confMatrix is a table, adjust as needed for your data structure
+    ggplot2::ggplot(melt(confMatrix), aes(x=Var1, y=Var2, fill=value)) +
+      geom_tile() +
+      scale_fill_gradient(low = "white", high = "blue") +
+      theme_minimal() +
+      labs(x = 'Predicted', y = 'Actual', fill = 'Count') +
+      ggtitle(paste("Confusion Matrix:", input$classifierType))
   })
 })
