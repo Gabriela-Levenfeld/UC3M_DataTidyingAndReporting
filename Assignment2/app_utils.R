@@ -45,26 +45,6 @@ make_prediction <- function(processed_img, classifierType) {
   )
 }
 
-# Accuracy of the selected classifier using the test set
-get_accuracy <- function (classifierType) {
-  switch (classifierType,
-          "Average Image" = readRDS("precomputed_data/avg_accuracy.rds"),
-          "K-Nearest Neighbors" = readRDS("precomputed_data/knn_accuracy.rds"),
-          "Random Forest" = readRDS("precomputed_data/rf_accuracy.rds"),
-          NA # Default case
-  )
-}
-
-# Model explanation of the selected classifier
-get_model_explanation <- function(classifierType) {
-  explanations <- list(
-    "Average Image" = "The Average Image classifier compares the uploaded image against average images of digits.",
-    "K-Nearest Neighbors" = "K-Nearest Neighbors classifier, commonly known as KNN, looks at the closest training examples in the feature space and uses a majority vote to determine the digit.",
-    "Random Forest" = "Random Forest is an ensemble method that uses multiple decision trees to improve prediction accuracy and control overfitting, making it perfect for handling complex image data."
-  )
-  explanations[[classifierType]]
-}
-
 # Notification handling --------------------------------------------------------
 handle_notifications <- function(input, prediction){
   # Check if an image file has been uploaded
@@ -93,12 +73,33 @@ handle_notifications <- function(input, prediction){
   removeNotification(id_notification)
 }
 
-# Model performance tab --------------------------------------------------------
-get_confusion_matrix <- function(classifierType) {
-  conf_matrices <- list(
-    #"Average Image" = readRDS("conf_matrix_avg.rds"),
-    #"K-Nearest Neighbors" = readRDS("conf_matrix_knn.rds"),
-    "Random Forest" = readRDS("rf_conf_mat.rds")
+# Performance function for models ----------------------------------------------
+# Accuracy of the selected classifier using the test set
+get_accuracy <- function (classifierType) {
+  switch (classifierType,
+          "Average Image" = readRDS("precomputed_data/avg_accuracy.rds"),
+          "K-Nearest Neighbors" = readRDS("precomputed_data/knn_accuracy.rds"),
+          "Random Forest" = readRDS("precomputed_data/rf_accuracy.rds"),
+          NA # Default case
   )
-  conf_matrices[[classifierType]]
+}
+
+# Model explanation of the selected classifier
+get_model_explanation <- function(classifierType) {
+  explanations <- list(
+    "Average Image" = "The Average Image classifier compares the uploaded image against average images of digits.",
+    "K-Nearest Neighbors" = "K-Nearest Neighbors classifier, commonly known as KNN, looks at the closest training examples in the feature space and uses a majority vote to determine the digit.",
+    "Random Forest" = "Random Forest is an ensemble method that uses multiple decision trees to improve prediction accuracy and control overfitting, making it perfect for handling complex image data."
+  )
+  explanations[[classifierType]]
+}
+
+# Load precomputed confusion matrix of the selected classifier
+get_confusion_matrix <- function(modelType) {
+  switch(modelType,
+         "Average Image" = readRDS("precomputed_data/avg_conf_mat.rds"),
+         "K-Nearest Neighbors" = readRDS("precomputed_data/knn_conf_mat.rds"),
+         "Random Forest" = readRDS("precomputed_data/rf_conf_mat.rds"),
+         NA # Default case
+  )
 }

@@ -5,9 +5,6 @@ library(plotly)
 library(shapr)
 library(randomForest)
 library(class) # For knn
-# For SVM + hyper-parameter tuning
-library(e1071)
-library(caret)
 
 # Load data --------------------------------------------------------------------
 load(file = "qmnist_nist.RData")
@@ -49,10 +46,14 @@ for(img_index in 1:nrow(test_nist)){
 saveRDS(predictions_avg, file="precomputed_data/avg_predictions.rds")
 
 accuracy_avg <- counter_good_pred / nrow(test_nist)
-accuracy_avg
 saveRDS(accuracy_avg, file="precomputed_data/avg_accuracy.rds")
 
+# predictions_avg <- readRDS("precomputed_data/avg_predictions.rds")
+conf_mat_avg <- table(Predicted = predictions_avg, Actual = test_nist$digit)
+saveRDS(conf_mat_avg, file = "precomputed_data/avg_conf_mat.rds")
+
 # KNN --------------------------------------------------------------------------
+# Model is implemented inside the shiny app, these are just for precomputed data
 prediction_knn <- knn(train=train_nist$px,
                       test= test_nist$px, 
                       cl=train_nist$digit,
@@ -62,6 +63,8 @@ saveRDS(prediction_knn, file="precomputed_data/knn_predictions.rds")
 accuracy_knn <- mean(prediction_knn==test_nist$digit) # 0.978293
 saveRDS(accuracy_knn, file="precomputed_data/knn_accuracy.rds")
 
+conf_mat_knn <- table(Predicted = prediction_knn, Actual = test_nist$digit)
+saveRDS(conf_mat_knn, file = "precomputed_data/knn_conf_mat.rds")
 
 # Random Forest model ----------------------------------------------------------
 # Tiempo en ejecutar: 4 mins
@@ -82,35 +85,17 @@ saveRDS(rf_model, file="precomputed_data/rf_model.rds")
 print(rf_model) # Displays the model summary
 
 # Evaluate the model on test data
-test_pred <- predict(rf_model, newdata = as.matrix(test_nist$px)) # No tarda en vd
-conf_mat <- table(Predicted = test_pred, Actual = test_nist$digit)
-saveRDS(conf_mat, file = "precomputed_data/rf_conf_mat.rds")
+test_pred <- predict(rf_model, newdata = as.matrix(test_nist$px))
+rf_conf_mat <- table(Predicted = test_pred, Actual = test_nist$digit)
+saveRDS(rf_conf_mat, file = "precomputed_data/rf_conf_mat.rds")
 
-accuracy <- sum(diag(conf_mat)) / sum(conf_mat)
+accuracy <- sum(diag(rf_conf_mat)) / sum(rf_conf_mat)
 print(paste("Accuracy on test set:", accuracy)) # 0.975826344351258
 saveRDS(accuracy, file = "precomputed_data/rf_accuracy.rds")
 
 feature_importance <- importance(rf_model)
 saveRDS(importance, file = "precomputed_data/rf_importance.rds")
 
-## Plots ------------------------------------------------------------------------
-# Reshape the feature importance into a 28x28 data frame for plotting
-importance_matrix <- matrix(feature_importance[, "MeanDecreaseGini"], nrow = 28, byrow = TRUE)
-feature_grid <- expand.grid(row = 28:1, col = 1:28) # Create a grid for plotting
-feature_grid$importance <- as.vector(importance_matrix)
-
-# Plot the heatmap
-gg <- ggplot(feature_grid, aes(x = col, y = row, fill = importance)) +
-  geom_tile() +
-  scale_fill_gradient(low = "white", high = "blue") +
-  labs(title = "Heatmap of pixel importance", x = "Pixel column", y = "Pixel row") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        axis.title = element_text(size = 12),
-        title = element_text(size = 14))
-
-# Optional: If you want to use plotly for an interactive plot
-ggplotly(gg)
 
 
 # Plot for aboutApp.md ---------------------------------------------------------
@@ -122,81 +107,3 @@ ggplot(data.frame(train_nist$digit), aes(x = factor(train_nist$digit))) +
   labs(title = "Frequency of Each Digit in the Dataset",
        x = "Digit") +
   theme_minimal()
-
-
-# TODO: Bar chart fot model accuracy comparison
-
-
-
-# Thing I will delete -------------------------------------
-# CNN --------------------------------------------------------------------------
-library(keras)
-
-# Define a few parameters to be used in the CNN model
-batch_size <- 128
-num_classes <- 10
-epochs <- 10
-
-
-# define model structure 
-cnn_model <- keras_model_sequential() %>%
-  layer_conv_2d(filters = 32, kernel_size = c(3,3), activation = 'relu', input_shape = input_shape) %>% 
-  layer_max_pooling_2d(pool_size = c(2, 2)) %>% 
-  layer_conv_2d(filters = 64, kernel_size = c(3,3), activation = 'relu') %>% 
-  layer_max_pooling_2d(pool_size = c(2, 2)) %>% 
-  layer_dropout(rate = 0.25) %>% 
-  layer_flatten() %>% 
-  layer_dense(units = 128, activation = 'relu') %>% 
-  layer_dropout(rate = 0.5) %>% 
-  layer_dense(units = num_classes, activation = 'softmax')
-
-# Compile the model
-cnn_model %>% compile(
-  loss = 'sparse_categorical_crossentropy',
-  optimizer = optimizer_rmsprop(),
-  metrics = c('accuracy')
-)
-
-
-
-# TODO: Not working
-# SVM with non-linear PCA ------------------------------------------------------
-# Install and load the kernlab package for Kernel PCA
-if (!requireNamespace("kernlab", quietly = TRUE)) install.packages("kernlab")
-library(kernlab)
-
-# Assuming you've already loaded your dataset into `train_data` and `test_data`
-# Perform Kernel PCA on the training data
-kpca_train <- kpca(~., data=as.data.frame(train_nist$px), kernel="rbfdot", features=50)
-
-# Transform both training and test data using the Kernel PCA model
-train_data_transformed <- as.matrix(predict(kpca_train, as.data.frame(train_data)))
-test_data_transformed <- as.matrix(predict(kpca_train, as.data.frame(test_nist$px)))
-
-# SVM training on the transformed data
-svm_model <- svm(x = train_data_transformed, y = labels, kernel = "radial", cost = 1, gamma = 1/50)
-
-# Save the trained SVM model to disk
-saveRDS(svm_model, file = "precomputed_data/svm_model.rds")
-
-
-# Support Vector Machine ------------------------------------------------------
-train_control <- trainControl(method = "cv", number = 5, allowParallel = TRUE)
-
-# Hyper-parameter tuning
-svm_grid <- expand.grid(C = c(0.1, 1, 10), sigma = c(0.01, 0.1, 1))
-
-set.seed(123) # For reproducibility
-svm_model <- train(x = train_data, y = labels,
-                   method = "svmLinear")
-saveRDS(svm_model, file="precomputed_data/svm_model.rds")
-
-# # SVM classifier ---------------------------------------------------------------
-# trainControl <- trainControl(method = "cv", number = 3) # Training control
-# # Train the SVM model
-# svm_model <- train(x = data,
-#                    y = labels,
-#                    method = "svmLinear")
-# 
-# # Save the trained SVM model
-# saveRDS(svm_model, "svm_model.rds")

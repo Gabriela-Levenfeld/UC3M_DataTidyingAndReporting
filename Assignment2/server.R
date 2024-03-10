@@ -1,8 +1,8 @@
 # Load materials ---------------------------------------------------------------
 # Packages
 library(shiny)
-library(ggplot2)
 library(reshape2)
+library(ggplot2)
 
 # Load required script
 source("app_utils.R")
@@ -122,6 +122,7 @@ shinyServer(function(input, output, session) {
       )
     })
   }
+  
   # Model accuracy outputs
   render_custom_box("accuracyAvgBox", "Average Image")
   render_custom_box("accuracyKnnBox", "K-Nearest Neighbors")
@@ -129,15 +130,27 @@ shinyServer(function(input, output, session) {
   
   # Confusion matrix plot
   output$confMatrixPlot <- renderPlot({
-    confMatrix <- get_confusion_matrix(input$classifierType)
-    if (is.null(confMatrix)) return()
+    req(input$modelChoice) # Ensure that a model has been selected
+    confMatrix <- get_confusion_matrix(input$modelChoice)
     
-    # Assuming confMatrix is a table, adjust as needed for your data structure
-    ggplot2::ggplot(melt(confMatrix), aes(x=Var1, y=Var2, fill=value)) +
-      geom_tile() +
-      scale_fill_gradient(low = "white", high = "blue") +
+    # Transform the matrix to long format
+    confMatrixLong <- reshape2::melt(as.matrix(confMatrix), varnames = c("Predicted", "Actual"))
+    confMatrixLong$value <- as.numeric(confMatrixLong$value) # Forcing a numeric data type
+
+    # Define the class labels
+    class_labels <- as.character(0:9)
+    
+    # Plot confusion matrix using ggplot2
+    ggplot(data = confMatrixLong, aes(x = Actual, y = Predicted, fill = value)) +
+      geom_tile(color = "white") +
+      geom_text(aes(label = value), color = "black", size = 4, vjust = 1) + # Add each value in the cell
+      scale_fill_gradient(low = "white", 
+                          high = "blue", 
+                          limits = c(0, max(confMatrixLong$value, na.rm = TRUE))) + # For blue color gradient
+      scale_x_continuous(breaks = seq(0, 9, by = 1), labels = 0:9) +  # Set label in the center of cell
+      scale_y_continuous(breaks = seq(0, 9, by = 1), labels = 0:9) +  # Set label in the center of cell
       theme_minimal() +
-      labs(x = 'Predicted', y = 'Actual', fill = 'Count') +
-      ggtitle(paste("Confusion Matrix:", input$classifierType))
+      labs(x = 'Actual', y = 'Predicted', fill = 'Count') +
+      ggtitle(paste("Confusion matrix:", input$modelChoice))
   })
 })

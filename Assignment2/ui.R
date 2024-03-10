@@ -92,14 +92,26 @@ dashboardPage(
                          uiOutput("accuracyRfBox", style = "flex: 1;"),
                          uiOutput("accuracyKnnBox", style = "flex: 1;")
                        )
-                      )
+                      ),
+                style = "padding-bottom: 20px;" # Add padding at the bottom
               ),
               fluidRow(
-                selectInput("modelChoice", "Choose model to view confusion matrix:",
-                            choices = c("Average Image", "K-Nearest Neighbors", "Random Forest")),
-                plotOutput("confMatrixPlot") # Placeholder for the confusion matrix plot
-      )
+                column(width = 8,
+                       plotOutput("confMatrixPlot")
+                ),
+                column(width = 4,
+                       h4("Confusion Matrix", class = "text-center", style = "margin-bottom: 20px;"),
+                       p("A confusion matrix is a table that is used to describe the performance of a classification model. Each cell in the table shows the count of predictions for each class combination."),
+                       br(),
+                       radioButtons("modelChoice", "Choose model:",
+                                    choices = c("Average Image",
+                                                "K-Nearest Neighbors",
+                                                "Random Forest"),
+                                    selected = "Average Image"
+                       )
+                )
               )
+            )
     )
   )
 )
