@@ -8,13 +8,39 @@
   font-weight: bold;
   color: #333;
 }
+
 .custom-image-container img {
   width: 100%; 
   height: auto; 
   max-height: 400px; 
-  display: block; 
-  margin-left: auto; 
-  margin-right: auto;
+  display: block;
+  margin: 0 auto; /* centers the image within its container */
+}
+
+/* Apply styles to all images within markdown content */
+.content img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Apply styles for header main Shiny app tab */
+.header-container {
+  display: flex;
+  justify-content: flex-end; /* Aligns content to the right side */
+  align-items: center; /* Center the content */
+  padding: 10px; /* Add space */
+}
+
+.header-titles {
+  text-align: right; /* Aligns the text to the right */
+}
+
+.header-main-title,
+.header-sub-title {
+  font-style: italic;
+  font-size: 14px;
+  margin: 0; /* Removes default margins */
+  padding: 5px 0; /* Adds some vertical spacing without horizontal */
 }
 
 /* To ensure it takes up more width */

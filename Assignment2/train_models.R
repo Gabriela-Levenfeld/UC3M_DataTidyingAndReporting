@@ -1,3 +1,22 @@
+#-------------------------------------------------------------------------------
+# Data preparation and Model training for Handwritten Digit Recognition Shiny App
+#-------------------------------------------------------------------------------
+#
+# This script performs the following tasks:
+# 1. Loads the MNIST dataset used for training and testing machine learning models.
+# 2. Sets up parallel processing to improve the efficiency of model training.
+# 3. Trains three different classifiers: Average Image, K-Nearest Neighbors (KNN), 
+#    and Random Forest.
+# 4. Saves some data as the random forest model, predictions, accuracy metrics,
+#    among others, for use within the Shiny app.
+# 5. Generates and saves test images for model prediction testing.
+#
+# The trained models and metrics are stored in the 'precomputed_data' directory,
+# which is created if it does not exist. This pre-computation allows for faster 
+# Shiny app performance as computationally expensive operations are done in advance.
+#
+#-------------------------------------------------------------------------------
+
 # Packages ---------------------------------------------------------------------
 library(doParallel)
 library(ggplot2)

@@ -1,10 +1,19 @@
+#-------------------------------------------------------------------------------
+# ui.R
+# User interface for the Handwritten digit recognition Shiny app
+#-------------------------------------------------------------------------------
+#
+# It includes the creation of the dashboard elements such as headers, sidebars,
+# body, and the placement of input and output elements for interaction.
+#-------------------------------------------------------------------------------
+
 # Packages ---------------------------------------------------------------------
 library(shiny)
 library(shinydashboard)
 
 # User Interface ---------------------------------------------------------------
 dashboardPage(
-  skin = "blue",
+  skin = "blue", # Color for the dashboard appearance
   dashboardHeader(
     title = "Handwritten digit recognition",
     tags$li(
@@ -25,17 +34,26 @@ dashboardPage(
     )
   ),
   dashboardBody(
+    # Initialize CSS for custom functionality
     tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "app_styles.css")),
+    # First tab: Get Started ---------------------------------------------------
     tabItems(
       tabItem(tabName = "getStarted",
               fluidRow(
-                tags$img(src = "uc3m_logo.svg", height = "50px", style = "float: right;"),
-                tags$h4("Data Tidying and Reporting - Task 2",
-                        style = "margin-left: 60px; line-height: 50px; font-style: italic;"),
-                div(style = "clear: both;")
+                div(class = "header-container",
+                    div(class = "header-titles",
+                        tags$h4("Data Tidying and Reporting - Task 2",
+                                class = "header-main-title"
+                        ),
+                        tags$h4("MSc in Statistics for Data Science at UC3M",
+                                class = "header-sub-title"
+                        )
+                    )
+                )
               ),
               includeMarkdown("www/aboutApp.md")
       ),
+      # Second tab: Analyze Digit ----------------------------------------------
       tabItem(
         tabName = "analyzeDigit",
         fluidRow(
@@ -76,6 +94,7 @@ dashboardPage(
           column(12, uiOutput("modelSummaryUI"))
         )
       ),
+      # Third tab: Model Comparison --------------------------------------------
       tabItem(tabName = "modelPerformance",
               fluidRow(
                 div(class = "well",

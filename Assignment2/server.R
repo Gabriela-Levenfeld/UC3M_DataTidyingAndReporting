@@ -1,3 +1,13 @@
+#-------------------------------------------------------------------------------
+# server.R
+# Server for the Handwritten digit recognition Shiny app
+#-------------------------------------------------------------------------------
+#
+# This script contains the server logic of the Shiny application, it holds the
+# reactive components and data processing technique. It dynamically generates UI
+# elements based on the user interaction.
+#-------------------------------------------------------------------------------
+
 # Load materials ---------------------------------------------------------------
 # Packages
 library(shiny)

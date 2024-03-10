@@ -1,3 +1,18 @@
+#-------------------------------------------------------------------------------
+# app_utils.R
+# Utility functions for the Handwritten digit recognition Shiny app
+#-------------------------------------------------------------------------------
+#
+# This script contains utility functions used by the server of the Shiny app
+# to perform image processing, predictions, and to download model performance metrics.
+#
+# The Random Forest model is pre-trained and its data is loaded from the 'precomputed_data' 
+# folder, this decision was made due to be a time-consuming task.
+#
+# The MNIST dataset, loaded from 'precomputed_data/qmnist_nist.RData', is used for
+# training the KNN and Average image classifiers within the app.
+#-------------------------------------------------------------------------------
+
 # Load materials ---------------------------------------------------------------
 # Libraries
 library(png)
@@ -5,7 +20,7 @@ library(class) # For KNN
 library(randomForest)
 
 # MNIST data
-load(file = "qmnist_nist.RData")
+load(file = "precomputed_data/qmnist_nist.RData")
 
 # Classifier Functions ---------------------------------------------------------
 # Random Forest is pre-computed
