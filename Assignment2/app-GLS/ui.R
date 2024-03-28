@@ -7,10 +7,6 @@
 # body, and the placement of input and output elements for interaction.
 #-------------------------------------------------------------------------------
 
-# Packages ---------------------------------------------------------------------
-library(shiny)
-library(shinydashboard)
-
 # User Interface ---------------------------------------------------------------
 dashboardPage(
   skin = "blue", # Color for the dashboard appearance

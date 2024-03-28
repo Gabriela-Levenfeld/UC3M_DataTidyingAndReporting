@@ -13,12 +13,6 @@
 # training the KNN and Average image classifiers within the app.
 #-------------------------------------------------------------------------------
 
-# Load materials ---------------------------------------------------------------
-# Libraries
-library(png)
-library(class) # For KNN
-library(randomForest)
-
 # MNIST data
 load(file = "precomputed_data/qmnist_nist.RData")
 
