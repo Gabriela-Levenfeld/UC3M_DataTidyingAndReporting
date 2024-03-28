@@ -29,6 +29,9 @@ COPY /app-GLS ./app
 RUN Rscript -e 'install.packages("renv")'
 RUN Rscript -e 'renv::restore()'
 
+# Manually install the markdown package due to issues with renv management
+RUN R -e 'install.packages("markdown", repos="http://cran.rstudio.com/")'
+
 # Expose port
 EXPOSE 3838
 
