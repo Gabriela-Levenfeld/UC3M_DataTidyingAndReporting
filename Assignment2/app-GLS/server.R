@@ -8,12 +8,6 @@
 # elements based on the user interaction.
 #-------------------------------------------------------------------------------
 
-# Load materials ---------------------------------------------------------------
-# Packages
-library(shiny)
-library(reshape2)
-library(ggplot2)
-
 # Load required script
 source("app_utils.R")
 
