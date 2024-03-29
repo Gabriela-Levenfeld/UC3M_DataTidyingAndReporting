@@ -1,6 +1,4 @@
----
-title: "Handwritten Digit Recognition Shiny-App"
----
+# Handwritten Digit Recognition Shiny-App
 
 This repository contains a shiny app designed to identify digits from 0 to 9 based on uploaded images. The app is fully containerized with Docker, making it easy to run on any platform that supports Docker. Additionally, instructions for manual installation without using Docker are provided for users not on Linux or without Docker.
 
